@@ -1,0 +1,294 @@
+
+DESIGN DOCUMENT
+Sentix Tinder
+Sentiment Analysis Dashboard — Mobile UI
+
+
+Product	Sentix Tinder — Sentiment Analysis Dashboard
+Version	1.0  (Stitch Prototype)
+Platform	Mobile Web (iOS + Android)
+Date	June 2025
+Author	—
+Status	Design Complete · Development Pending
+
+Prepared from Stitch UI Export
+
+
+1. Project Overview
+
+Sentix Tinder is a mobile-first analytics dashboard designed to present sentiment analysis results derived from Tinder app store reviews. The interface gives product stakeholders an at-a-glance view of user sentiment, aspect-level breakdowns, keyword trends, and anomalies — all in a clean, brand-aligned mobile UI.
+
+The Stitch prototype contains four primary screens delivered in three visual variants (Dark v1, Dark v2 / Glassmorphism, and Light), totalling twelve HTML files. This document serves as the canonical design reference for development handoff.
+
+1.1 Purpose of This Document
+•Define the component inventory, layout rules, and interaction behaviours for each screen
+•Document the design token system (colours, typography, spacing, effects)
+•Capture the three visual variants and the rules governing when each is applied
+•Provide a development handoff checklist and open decisions log
+
+1.2 Design Goals
+#	Goal	Rationale
+G1	Mobile-first layout	All screens target 390px wide viewport (iPhone 14 Pro class)
+G2	Brand coherence	Tinder pink/orange gradient anchors the visual identity throughout
+G3	Data clarity	Complex NLP output must be scannable in under 5 seconds per screen
+G4	Accessibility	Light theme variant targets WCAG AA contrast (4.5:1 minimum)
+G5	Theme flexibility	Dark and light themes share identical structure; only tokens differ
+
+
+
+2. Design System
+
+2.1 Colour Tokens
+All colours are defined as Tailwind CSS extensions under the tinder and sentiment namespaces.
+
+Token Name	Hex	Usage	Variant
+tinder.pink	#FE3C72	Primary CTA, active states, gradients	All variants
+tinder.orange	#FF7854	Gradient end, accent highlights	All variants
+tinder.dark	#111418	Page background	Dark v1 & v2 only
+tinder.card	#1E2228	Card / section backgrounds	Dark v1 only
+sentiment.positive	#22C55E	Positive sentiment bars, labels	All variants
+sentiment.negative	#EF4444	Negative sentiment bars, alert badges	All variants
+sentiment.neutral	#94A3B8	Neutral segment in stacked bars	All variants
+Mismatch amber	#F59E0B	Rating/sentiment mismatch badge, border	All variants
+
+2.2 Typography
+Element	Font Size	Weight	Usage
+App Title (gradient)	24px / 2xl	Bold 700	"Sentix Tinder" in header
+Screen Title	20px / xl	Bold 700	Per-screen headings
+Section Heading	18px / lg	Semibold 600	Card section titles
+KPI Value	24px / 2xl	Bold 700	12,842 / 4.2 in stat cards
+Body / Label	14px / sm	Regular 400	Descriptions, timestamps
+Badge / Micro text	10px / xs	Bold 700 uppercase	Sentiment badges, sub-labels
+Keyword rank number	12px / xs	Bold 700	Rank circles in keyword list
+
+Font stack: Inter → -apple-system → BlinkMacSystemFont → Segoe UI → Roboto → Arial. Inter is specified explicitly in the Light variant and the v2 Dark variant.
+
+2.3 Spacing & Corner Radii
+Component	Border Radius	Notes
+Page cards / sections	rounded-3xl (24px)	Sentiment distribution, trend chart containers
+KPI stat cards	rounded-2xl (16px)	Top metrics grid
+Review cards	rounded-xl (12px)	Individual review list items
+Filter chips / badges	rounded-full (∞)	Pill buttons, sentiment badges
+Alert banners	rounded-2xl (16px)	Mismatch alert section
+Bottom nav (v2)	rounded-2xl (16px)	Floating bottom navigation bar
+
+2.4 Visual Effects
+Effect	Description
+Gradient Text	linear-gradient(45°, #fe3c72, #ff7854) applied via -webkit-background-clip: text on the app title and screen headings
+card-shadow	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) — applied to all card components in Dark v1
+Glassmorphism (v2)	backdrop-filter: blur(12–16px) + semi-transparent background on header and nav bar; creates depth between layers
+Sentiment bar anim.	CSS transition: width 0.8s ease-out — stacked horizontal bars animate in from 0 to final width on mount
+Keyword hover scale	hover:scale-110 transition-transform on word cloud tokens — subtle pop on cursor hover
+Mismatch border	border-2 border-amber-500/50 + shadow-amber-900/10 to visually distinguish mismatched review cards
+Mismatch badge	Absolute positioned amber circle (bg-amber-500, -top-2, -right-2) with warning icon overlapping the card corner
+
+
+
+3. Visual Variant System
+
+The Stitch export provides three visual variants for all four screens. The underlying HTML structure and component hierarchy are identical across variants — only design tokens (colours, effects, backgrounds) change.
+
+Variant	Background	Cards	Key Differentiators
+Dark v1	#111418 solid	#1E2228 solid	Solid card backgrounds, strong card-shadow, border-gray-800 on all cards
+Dark v2	#111418 gradient	Glassmorphism	Backdrop-blur header & bottom nav, floating bottom nav bar added, gradient avatar ring
+Light	#FFFFFF / white	white + shadow	Text colours inverted (gray-800), Inter font explicit, green positive indicators darker (green-600)
+
+Recommendation: Ship Dark v2 as the primary production theme. Expose a system-preference toggle (prefers-color-scheme) to switch to the Light variant. Dark v1 can be deprecated after the glassmorphism system is validated.
+
+
+
+4. Screen Specifications
+
+4.1 Screen 1 — Dashboard Overview
+
+Variant 1 — Dark	Variant 2 — Dark Glass	Light Theme
+		
+
+Purpose
+The entry point of the app. Gives a high-level summary of sentiment health, key metrics, and alerts so the user can quickly assess the state of Tinder reviews without drilling into details.
+
+Component Inventory
+Component	Element Type	Content / Behaviour
+AppHeader	Sticky <header>	App title with gradient text, subtitle, user avatar circle (initials fallback). Sticky top-0, z-50.
+KPI Grid	2-col CSS grid	Total Reviews (12,842 / +12% MoM) and Avg. Rating (4.2★ vs 3.8 industry avg). Tap → drill-down detail (future).
+Sentiment Donut	Chart.js doughnut	80% cutout. Inner label: '72% Positive Score'. Legend row below: Positive 72% / Neutral 18% / Negative 10%.
+Trend Chart	Chart.js line chart	3 lines (Positive/Neutral/Negative) over time. Period selector dropdown (Last 30 Days / Last 7 Days).
+Mismatch Alert	Alert banner	Red tinted bg, warning icon, headline, one-line description. Static in prototype; will link to Review Explorer filtered to mismatches.
+Bottom Nav (v2)	Fixed <nav>	Stats / Reviews / Alerts / Settings. Active = tinder-pink, inactive = gray-500. Glassmorphism background.
+
+Layout Notes
+•Page padding: px-4 (16px horizontal), pt-6 (24px top), pb-10 (40px bottom) or pb-24 if bottom nav present
+•Inter-card gap: space-y-6 (24px vertical stack between sections)
+•Donut chart canvas height: 200px; chart fills full width with centred absolute-positioned label overlay
+•Trend line chart canvas height: 180px
+
+4.2 Screen 2 — Aspect Analysis
+
+Variant 1 — Dark	Variant 2 — Dark Glass	Light Theme
+		
+
+Purpose
+Breaks down sentiment into five product dimensions. Users can immediately see which aspects of the Tinder experience drive satisfaction or dissatisfaction.
+
+Component Inventory
+Component	Element Type	Content / Behaviour
+Back Header	Sticky header w/ back btn	Back arrow left, title centre, filter icon right. Gradient title text. backdrop-blur on dark v2.
+Intro Section	h2 + subtext paragraph	"Sentiment Breakdown" heading, review count sub-label (e.g. 'Based on 1,240 recent user reviews.')
+Aspect List	Vertical stack of items	Each item: label row (aspect name left, dominant sentiment % right), stacked 3-segment bar below.
+Stacked Bar	3-div flex row in container	h-3 rounded-full container, three child divs with % widths (Positive / Neutral / Negative).
+Dominant Label	Inline text badge	Colour matches dominant segment: green = positive, amber/gray = neutral, red = negative.
+
+Aspects & Sample Data
+Aspect	Positive %	Neutral %	Negative %	Dominant Sentiment
+UI / UX	70%	20%	10%	Positive (green)
+Pricing	25%	20%	55%	Negative (red)
+Matches / Algorithm	35%	45%	20%	Neutral (gray)
+Bugs / Performance	65%	15%	20%	Positive (green)
+Safety / Privacy	40%	25%	35%	Positive (green)
+
+Animation
+•Each segment bar animates width from 0 → final value on scroll-into-view
+•Transition: width 0.8s ease-out via .sentiment-bar CSS class
+•Stagger by 100ms per aspect row (to be implemented in JS)
+
+
+
+4.3 Screen 3 — Review Explorer
+
+Variant 1 — Dark	Variant 2 — Dark Glass	Light Theme
+		
+
+Purpose
+A filterable, searchable list of individual reviews. Primarily used to investigate specific reviews — especially mismatched ones (5★ with negative sentiment) which are flagged visually.
+
+Component Inventory
+Component	Element Type	Content / Behaviour
+Header + Search	Sticky header area	Title row with refresh icon. Below: text search input (left icon, placeholder 'Search review text...').
+Filter Chips	Horizontal scroll row	All Reviews (active, indigo bg) / Mismatched Only / Positive / Negative. Scroll: overflow-x-auto, no scrollbar.
+Review Card (standard)	article element	Star rating row + sentiment badge (top). Review text (body). Username + timestamp (footer).
+Review Card (mismatch)	article element	Identical to standard card PLUS: amber border (border-2 border-amber-500/50), amber warning badge at -top-2 -right-2.
+Sentiment Badge	Flex pill div	Coloured dot + uppercase label ('NEGATIVE AI', 'POSITIVE AI'). bg-red/green-900/30, border red/green-500/30.
+Star Rating	SVG icon row	5 SVG path stars. Filled = amber-400. Empty = gray-600. Exact count set per review.
+
+Review Card States
+State	Visual Indicator	Example
+Standard Negative	Red sentiment badge, gray border	1★ + NEGATIVE AI badge
+Standard Positive	Green sentiment badge, gray border	4★ + POSITIVE AI badge
+Mismatch Detected	Amber card border + corner warning badge	5★ + NEGATIVE AI badge + ⚠ overlay
+Neutral	Gray/slate sentiment badge, gray border	3★ + NEUTRAL badge
+
+4.4 Screen 4 — Keyword Insights
+
+Variant 1 — Dark	Variant 2 — Dark Glass	Light Theme
+		
+
+Purpose
+Surfaces the most frequently mentioned words in positive and negative reviews, enabling quick identification of what users love and what they complain about most.
+
+Component Inventory
+Component	Element Type	Content / Behaviour
+Positive Word Cloud	Flex-wrap container	Words in varying sizes (text-4xl → text-sm) and green opacity values. 'Easy', 'Fun', 'Match', 'Love' prominent.
+Negative Word Cloud	Flex-wrap container	Same layout in red tones. 'Fake', 'Scam', 'Money', 'Price' prominent.
+Cloud Header	Section heading row	Thumbs-up/down icon + 'Positive Buzz' / 'Critical Issues' label. Review count badge top-right.
+Top Keywords List	Vertical card list	Each item: rank circle (pink tinted) + keyword name + frequency bar + count label.
+Sentiment Filter	Select dropdown	Filter keyword list by: All Sentiments / Positive Only / Negative Only.
+
+Sample Keyword Data
+Rank	Keyword	Count	Sentiment	Bar Fill %
+1	Fake Profiles	1,024	Negative	85%
+2	Premium Price	876	Negative	73%
+3	Easy to Use	742	Positive	62%
+4	Match Quality	651	Neutral	54%
+5	App Crash	589	Negative	49%
+
+
+
+5. Navigation & Information Architecture
+
+5.1 Screen Flow
+The app follows a shallow two-level navigation model. The Dashboard Overview acts as the hub; all other screens are reached via the bottom navigation bar (v2) or from alert/insight cards.
+
+Entry Point	Destination	Trigger
+Dashboard Overview	Aspect Analysis	Tap an aspect card or the Aspect icon in bottom nav
+Dashboard Overview	Review Explorer	Tap 'Reviews' in bottom nav, or tap Mismatch Alert banner
+Dashboard Overview	Keyword Insights	Tap 'Keywords' or any word cloud teaser card (future)
+Review Explorer	Review Detail	Tap individual review card (future screen)
+Any screen	Dashboard	Tap 'Stats' (first item) in bottom nav
+
+5.2 Bottom Navigation Bar (Dark v2)
+Tab	Icon (Material Symbols)	Route
+Stats	dashboard	/dashboard (active default)
+Reviews	forum	/reviews
+Alerts	notifications	/alerts
+Settings	settings	/settings
+Note: The bottom nav is present only in Dark v2. Dark v1 uses inline navigation via back arrows. Adopt the v2 nav for production across all variants.
+
+6. Reusable Component Library
+
+The following components appear across multiple screens and should be extracted into a shared component library for development.
+
+Component Name	Used In	Key Props
+<AppHeader>	All screens	title, subtitle, avatarInitials, theme (dark|light), glassEffect (bool)
+<KPICard>	Dashboard	label, value, trend (text + colour), icon (optional)
+<SentimentDonut>	Dashboard	positive, neutral, negative (0–100 each), centerLabel
+<TrendLineChart>	Dashboard	data (array), period (string), onPeriodChange
+<MismatchAlert>	Dashboard	count, description, onTap
+<AspectBar>	Aspect Analysis	label, positive, neutral, negative (%), animated (bool)
+<ReviewCard>	Review Explorer	stars, sentiment, text, author, time, isMismatch (bool)
+<SentimentBadge>	Review Explorer	label (string), sentiment (pos|neg|neu)
+<FilterChipRow>	Review Explorer	chips (array), activeIndex, onSelect
+<WordCloud>	Keyword Insights	words (array of {text, weight, sentiment}), theme (pos|neg)
+<KeywordListItem>	Keyword Insights	rank, keyword, count, barPercent, sentiment
+<BottomNav>	All screens (v2)	tabs (array), activeTab, onTabChange
+
+7. Responsive Design Constraints
+
+The prototype is designed exclusively for mobile viewports. Desktop usage is not in scope for v1.0.
+
+Breakpoint	Target Devices	Notes
+375px — 390px	iPhone SE / iPhone 14 Pro	Primary design target. All screens tested at 390px.
+360px — 375px	Android mid-range	Ensure KPI grid doesn't overflow. Reduce card padding to p-3 if needed.
+412px — 430px	Pixel 8 / iPhone 15 Plus	Extra horizontal space — max-w-md wrapper recommended to cap at 448px.
+≥ 768px (tablet)	iPad / tablet browsers	Out of scope v1. May require layout refactor to 2-column grid in future.
+
+8. Accessibility Considerations
+
+Area	Requirement
+Colour contrast	Light theme: all text on white backgrounds must meet 4.5:1 WCAG AA. Pink #FE3C72 on white = 3.9:1 — use only for decorative text, not body copy.
+Touch targets	All interactive elements (chips, cards, nav icons) must be ≥ 44×44px per Apple HIG / Android guidelines.
+ARIA labels	Back button → aria-label='Go back'; Filter icon → aria-label='Filter settings'; Refresh → aria-label='Refresh reviews'.
+Chart accessibility	Chart.js charts must include aria-label on <canvas> and a visually hidden data table as fallback.
+Focus states	All interactive elements need visible focus rings (focus:ring-2 focus:ring-pink-500 or system default).
+Motion sensitivity	Sentiment bar animations and keyword hover effects should respect prefers-reduced-motion: reduce.
+
+
+
+9. Development Handoff Checklist
+
+Task	Details	Status
+Tailwind config	Add tinder.* and sentiment.* colour tokens to tailwind.config.js	Pending
+Component scaffolding	Create all 12 components listed in Section 6	Pending
+Chart.js integration	Dashboard Donut + Trend Line; pass dynamic data from API	Pending
+Theme toggle	Implement CSS class toggle (dark|light) via system preference + manual switch	Pending
+Bar animation	Intersection Observer triggers width animation on scroll into view	Pending
+Review filter logic	All Reviews / Mismatched Only / Positive / Negative filter chips wired to data	Pending
+Search debounce	300ms debounce on review text search input	Pending
+Word cloud library	Replace prototype flex-wrap mock with react-wordcloud or d3-cloud for real data	Pending
+Bottom nav active state	Active tab = tinder-pink; inactive = gray-500; route-aware	Pending
+Material Symbols font	Load Google Fonts Material Symbols Outlined (used in v2 nav icons)	Pending
+Mismatch corner badge	Position: absolute -top-2 -right-2 relative to review card article	Pending
+Accessibility audit	Run Lighthouse accessibility score target ≥ 90 before release	Pending
+
+10. Open Questions & Decisions
+
+#	Question	Options	Owner
+Q1	Which dark variant ships as v1 production?	Dark v1 (solid) vs Dark v2 (glassmorphism)	Design Lead
+Q2	Real word cloud or styled approximation?	react-wordcloud / d3-cloud vs styled flex-wrap	Frontend Dev
+Q3	How is mismatch threshold defined in data?	5★ + Negative, or any 2+ star gap from sentiment?	Data / ML team
+Q4	Period selector in Trends: 30D / 7D only?	Could also add 90D, 1Y, Custom range	Product
+Q5	Is the app name 'Sentix Tinder' final?	Branding decision — could be 'Sentix' standalone	Product
+Q6	Desktop/tablet support timeline?	v1 mobile-only; v2 desktop grid layout?	Product
+
+
+End of Document
+Sentix Tinder Design Document  ·  v1.0  ·  Prepared from Stitch Export

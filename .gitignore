@@ -1,0 +1,16 @@
+# Environment
+.venv/
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Data
+*.csv
+ml/data/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+.DS_Store

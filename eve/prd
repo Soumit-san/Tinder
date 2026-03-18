@@ -1,0 +1,283 @@
+
+PRODUCT REQUIREMENTS DOCUMENT
+Tinder Reviews
+Sentiment Analysis Platform
+
+
+Document Version	v1.0
+Status	Draft
+Date	June 2025
+Project Type	Academic Mini-Project
+Domain	NLP / Sentiment Analysis
+
+Prepared for Academic Submission
+
+
+1. Executive Summary
+
+This document defines the complete product requirements for the Tinder Reviews Sentiment Analysis Platform — an end-to-end NLP mini-project that collects, processes, and visualises user sentiment from app store reviews of Tinder and competing dating applications.
+
+The platform goes beyond simple positive/negative classification. It incorporates aspect-based sentiment analysis, trend detection over time, fake review filtering, rating-text mismatch flagging, and a React-based interactive dashboard — making it a comprehensive, portfolio-ready project that demonstrates real-world NLP engineering skills.
+
+The system is designed to be modular, extensible, and academically sound, with a clearly documented NLP pipeline that can be presented during project vivas.
+
+2. Project Overview
+
+2.1 Problem Statement
+App store reviews are one of the richest, most unfiltered sources of user feedback available for consumer applications. However, Tinder and similar dating apps accumulate thousands of reviews monthly, making manual analysis impractical. There is a need for an automated, intelligent pipeline that can:
+•Classify sentiment at scale (positive, negative, neutral)
+•Identify which specific aspects of the app are causing satisfaction or dissatisfaction
+•Track how sentiment evolves over time (correlated with app updates or features)
+•Detect anomalies such as spam reviews or mismatched star ratings
+•Present insights in a clear, interactive visual dashboard
+
+2.2 Goals & Objectives
+•Build a complete, reproducible NLP pipeline from data collection to visualisation
+•Achieve >80% accuracy on sentiment classification using BERT or equivalent
+•Provide aspect-level sentiment breakdown across 5+ product dimensions
+•Enable comparative analysis across Tinder, Bumble, and Hinge
+•Deliver a working web dashboard with real-time review upload support
+•Produce a clean, well-documented codebase suitable for GitHub portfolio
+
+2.3 Scope
+In Scope	Out of Scope
+•Google Play review scraping
+•Text preprocessing pipeline
+•Sentiment classification (3-class)
+•Aspect-based sentiment analysis
+•Trend visualisation
+•React + Flask dashboard
+•Fake review detection
+•Cross-app comparison (3 apps)	•Apple App Store scraping
+•User authentication / accounts
+•Real-time streaming pipeline
+•Multilingual sentiment
+•Cloud deployment / CI-CD
+•Mobile application
+
+3. Stakeholders & Users
+
+Stakeholder	Role	Interest
+Student Developer	Primary builder & presenter	High-scoring submission, viva readiness
+Academic Supervisor	Evaluator	Technical depth, documented pipeline, originality
+End Users (Demo)	Dashboard users	Intuitive UI, clear insights from reviews
+Peer Reviewers	Secondary evaluators	Code quality, reproducibility
+
+
+
+4. Functional Requirements
+
+4.1 Feature Prioritisation Matrix
+Features are prioritised using the MoSCoW framework: Must Have, Should Have, Could Have, and Won't Have.
+
+ID	Feature	Priority	Module	Status
+F-01	Data Collection (Google Play Scraper)	Must Have	Data Ingestion	Planned
+F-02	Text Preprocessing Pipeline	Must Have	NLP Core	Planned
+F-03	Sentiment Classification (3-class)	Must Have	NLP Core	Planned
+F-04	Aspect-Based Sentiment Analysis	Must Have	NLP Core	Planned
+F-05	Word Cloud Generation	Must Have	Visualisation	Planned
+F-06	Sentiment Trend Over Time	Must Have	Analytics	Planned
+F-07	React Dashboard UI	Must Have	Frontend	Planned
+F-08	CSV Upload Support	Must Have	Frontend	Planned
+F-09	Rating vs Sentiment Mismatch Detection	Should Have	Analytics	Planned
+F-10	Fake / Spam Review Detection	Should Have	Analytics	Planned
+F-11	Auto Summary of Reviews (NLG)	Should Have	NLP Core	Planned
+F-12	Comparative App Analysis	Should Have	Analytics	Planned
+F-13	Emotion Detection (6-class)	Could Have	NLP Core	Backlog
+F-14	Geo-Based Sentiment (by Country)	Could Have	Analytics	Backlog
+F-15	Recommendation System	Could Have	AI Features	Backlog
+
+4.2 Feature Specifications
+F-01 — Data Collection
+The system shall scrape Google Play Store reviews for Tinder, Bumble, and Hinge using the google-play-scraper Python library. It shall collect a minimum of 5,000 reviews per application, including review text, star rating, date, and review thumbs-up count. Data shall be persisted as CSV files for reproducibility.
+
+F-02 — Text Preprocessing Pipeline
+The pipeline shall apply the following transformations in order:
+•Lowercase normalisation
+•URL and HTML tag removal
+•Emoji removal or replacement with text equivalents
+•Punctuation and special character stripping
+•Stopword removal (NLTK English corpus)
+•Lemmatisation using spaCy en_core_web_sm
+•Short review filtering (< 5 tokens after preprocessing)
+
+F-03 — Sentiment Classification
+The system shall support three sentiment classification approaches, selectable via configuration:
+•Basic: Multinomial Naive Bayes / Logistic Regression with TF-IDF features
+•Mid-tier: VADER (rule-based) and TextBlob (pattern-based)
+•Advanced: Fine-tuned BERT (bert-base-uncased via HuggingFace Transformers)
+Output labels: Positive, Negative, Neutral with confidence scores. The system shall report accuracy, precision, recall, and F1-score on a held-out test set.
+
+F-04 — Aspect-Based Sentiment Analysis
+The system shall identify sentiment for the following aspects within each review:
+Aspect	Keywords / Signals	Example Trigger Phrase
+UI / UX	interface, design, layout, navigation, simple, confusing	"The new UI is clean and easy to use"
+Pricing	price, subscription, premium, gold, expensive, free, cost, refund	"Gold subscription is way too expensive"
+Matches / Algorithm	match, like, algorithm, profile, swipe, boost	"The matching algorithm shows irrelevant profiles"
+Bugs / Performance	crash, bug, glitch, slow, freeze, load, error	"App crashes every time I open chats"
+Safety / Privacy	fake, bot, scam, privacy, data, report, block, verify	"Too many fake profiles and bots"
+
+F-09 — Rating vs Sentiment Mismatch Detection
+The system shall flag reviews where the star rating and sentiment polarity are inconsistent. A mismatch is defined as:
+•Star rating 4–5 AND classified sentiment is Negative
+•Star rating 1–2 AND classified sentiment is Positive
+Flagged reviews shall be surfaced in the dashboard as a dedicated 'Anomalies' tab with the review text, star rating, and predicted sentiment displayed side by side.
+
+F-10 — Fake / Spam Review Detection
+The system shall identify potentially fake or bot-generated reviews using:
+•Cosine similarity clustering: reviews with TF-IDF cosine similarity > 0.90 flagged as duplicates
+•Length heuristics: reviews with < 3 words flagged as low-quality
+•Repetition ratio: reviews where >50% of tokens are repeated flagged as spam
+Detection results shall be output as a flagged_reviews.csv file and displayed in the dashboard.
+
+5. Non-Functional Requirements
+
+Category	Requirement
+Performance	Full pipeline (5,000 reviews) must complete in under 5 minutes on a standard laptop (8GB RAM, modern CPU). Dashboard must load in < 2 seconds.
+Accuracy	Sentiment classifier must achieve a minimum macro F1-score of 0.78 on the test set. Results must be reproducible with fixed random seeds.
+Scalability	The pipeline must handle up to 50,000 reviews without code changes. Batch processing must be used for BERT inference.
+Usability	Dashboard UI must be operable without any training. All charts must include axis labels and legends. Colour scheme must be accessible (WCAG AA contrast).
+Maintainability	All modules must have docstrings. A requirements.txt and README with setup instructions must be included. Code must pass flake8 linting.
+Portability	The project must run on Windows, macOS, and Linux using a standard Python virtual environment. Docker support is a bonus.
+
+
+
+6. System Architecture
+
+6.1 High-Level NLP Pipeline
+The system follows a modular pipeline architecture with clearly defined stages:
+
+Stage	Description	Input	Output
+1. Collect	Scrape Google Play reviews via API	App package IDs	raw_reviews.csv
+2. Preprocess	Clean, tokenise, lemmatise text	raw_reviews.csv	clean_reviews.csv
+3. Extract	TF-IDF / BERT embeddings	clean_reviews.csv	feature_matrix
+4. Classify	Sentiment model inference	feature_matrix	sentiment_labels.csv
+5. Analyse	Aspect extraction, mismatch, trends	sentiment_labels.csv	analysis_results.json
+6. Visualise	Dashboard rendering, word clouds, charts	analysis_results.json	Web Dashboard
+
+6.2 Tech Stack
+Layer	Technology	Purpose
+Data Collection	google-play-scraper (Python)	Automated review scraping
+NLP / ML	NLTK, spaCy, scikit-learn	Preprocessing, feature extraction, baseline models
+Deep Learning	HuggingFace Transformers (BERT)	Advanced sentiment classification
+Data Analysis	Pandas, NumPy	Tabular data manipulation
+Visualisation	Matplotlib, Plotly, WordCloud	Charts, word clouds, trend graphs
+Backend API	FastAPI (Python)	RESTful API for dashboard
+Frontend UI	React + Vite + Recharts	Interactive web dashboard
+Styling	Tailwind CSS	Responsive UI design
+Version Control	Git + GitHub	Source control and portfolio
+
+7. Dashboard Specification
+
+The dashboard shall be built using React (Vite) on the frontend and FastAPI on the backend. It shall consist of the following views/tabs:
+
+7.1 Overview Tab
+•Total review count, date range, average star rating (KPI cards)
+•Sentiment distribution donut chart (Positive / Negative / Neutral)
+•Overall sentiment score (composite index 0–100)
+•Top 3 most mentioned words across all reviews
+
+7.2 Trends Tab
+•Monthly sentiment trend line chart (3 lines: Positive, Negative, Neutral)
+•Review volume bar chart over time
+•Ability to overlay app update dates as vertical markers
+
+7.3 Aspects Tab
+•Grouped bar chart: sentiment breakdown per aspect (UI, Pricing, Matches, Bugs, Safety)
+•Clickable aspect filter: shows representative reviews for that aspect
+•Aspect sentiment heatmap for cross-app comparison
+
+7.4 Word Cloud Tab
+•Separate word clouds for Positive and Negative reviews
+•Adjustable minimum frequency slider
+•Downloadable as PNG
+
+7.5 Anomalies Tab
+•Table of rating-sentiment mismatch reviews
+•Table of flagged fake/spam reviews
+•Filter by app, date, or mismatch type
+
+7.6 Compare Tab
+•Side-by-side sentiment comparison: Tinder vs Bumble vs Hinge
+•Radar chart for aspect-level comparison
+•Narrative auto-summary generated by the NLG module
+
+7.7 Upload Tab
+•CSV file upload interface
+•Column mapping wizard (map CSV columns to required fields)
+•Real-time processing progress indicator
+•Auto-redirect to Overview tab after processing
+
+
+
+8. Data Requirements
+
+8.1 Data Schema
+Each review record shall conform to the following schema:
+Field	Type	Description
+review_id	String	Unique identifier for each review
+app_name	String	Application name (tinder / bumble / hinge)
+review_text	String	Raw review text as posted by the user
+clean_text	String	Preprocessed review text
+star_rating	Integer (1–5)	User-assigned star rating
+review_date	Date (YYYY-MM-DD)	Date the review was posted
+thumbs_up	Integer	Number of helpful votes received
+sentiment_label	Enum (Pos/Neg/Neu)	Predicted sentiment classification
+sentiment_score	Float (0.0–1.0)	Confidence score for predicted label
+aspect_sentiments	JSON Object	Per-aspect sentiment labels and scores
+is_mismatch	Boolean	Flag for rating vs sentiment inconsistency
+is_spam	Boolean	Flag for detected fake or duplicate review
+
+9. Milestones & Timeline
+
+#	Milestone	Deliverables	Target
+M1	Data Collection & Setup	raw_reviews.csv for 3 apps, project repo initialised	Week 1
+M2	Preprocessing Pipeline	clean_reviews.csv, preprocessing module, unit tests	Week 2
+M3	Baseline Models	Naive Bayes + Logistic Regression, evaluation report	Week 3
+M4	BERT Fine-tuning	Fine-tuned model, improved F1 score, model card	Week 4–5
+M5	Aspect Analysis	Aspect sentiment module, aspect_results.csv	Week 5
+M6	Advanced Features	Mismatch detection, spam detection, NLG summary	Week 6
+M7	Dashboard (Backend)	FastAPI endpoints, all analysis results served	Week 7
+M8	Dashboard (Frontend)	React dashboard all tabs functional	Week 8
+M9	Testing & Polish	Bug fixes, documentation, README, demo video	Week 9
+M10	Final Submission	GitHub repo, project report, viva presentation	Week 10
+
+10. Risks & Mitigations
+
+Risk	Likelihood	Impact	Mitigation
+Google Play scraper blocked or rate-limited	Medium	High	Use delays between requests; cache scraped data locally; use Kaggle dataset as fallback
+BERT training too slow on local machine	High	Medium	Use Google Colab (free GPU); alternatively use distilBERT for faster inference
+Aspect keyword lists miss edge cases	Medium	Medium	Expand keyword lists iteratively using frequent unmatched terms from exploratory analysis
+React dashboard integration complexity	Low	Medium	Start with static mock data in frontend before connecting to live API
+Data quality issues (very short reviews)	High	Low	Apply minimum token length filter (>= 5 tokens) during preprocessing
+
+11. Success Metrics
+
+The project shall be considered successful if all of the following criteria are met at submission:
+
+Success Criterion	Target	Must Pass
+Sentiment classifier macro F1-score	>= 0.78	Yes
+All 5 aspect dimensions covered	100%	Yes
+Dashboard loads and renders correctly	All 7 tabs	Yes
+CSV upload → results pipeline functional	< 30 seconds	Yes
+Rating vs sentiment mismatch detection rate	>= 90% precision	Yes
+Fake review detection recall	>= 75%	No
+Auto-summary coherence (manual eval)	>= 4/5 rating	No
+GitHub repository with README	Complete	Yes
+Project report: all sections present	Complete	Yes
+
+12. Glossary
+
+Term	Definition
+Sentiment Analysis	NLP technique to identify the emotional tone of text as positive, negative, or neutral
+ABSA	Aspect-Based Sentiment Analysis — identifying sentiment for specific product/service dimensions within a review
+BERT	Bidirectional Encoder Representations from Transformers — a pre-trained deep learning model for NLP tasks
+VADER	Valence Aware Dictionary and sEntiment Reasoner — a rule-based sentiment analysis tool optimised for social media text
+TF-IDF	Term Frequency–Inverse Document Frequency — a numerical statistic used as a text feature for machine learning
+NLG	Natural Language Generation — automatically generating natural language text from structured data
+MoSCoW	Prioritisation framework: Must Have, Should Have, Could Have, Won't Have
+F1-Score	Harmonic mean of precision and recall; used to evaluate classification model performance
+
+
+End of Document
+Tinder Reviews Sentiment Analysis Platform  —  PRD v1.0

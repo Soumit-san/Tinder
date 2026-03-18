@@ -1,0 +1,345 @@
+
+TECH STACK DOCUMENT
+Sentix Tinder
+Sentiment Analysis Platform
+Full-Stack ML Engineering Reference
+
+
+Document Type	Tech Stack Reference
+Project	Sentix Tinder — Sentiment Analysis Dashboard
+Version	1.0
+Date	June 2025
+ML Frameworks	scikit-learn · PyTorch · TensorFlow · HuggingFace
+Status	Draft — Pending Engineering Review
+
+For internal engineering and academic use
+
+
+1. Introduction
+
+This document defines the complete technology stack for Sentix Tinder — a mobile-first sentiment analysis platform that processes Tinder app store reviews and presents NLP-derived insights through an interactive dashboard. It covers every layer of the system: data ingestion, machine learning model training, backend API, frontend UI, infrastructure, and the Kaggle competition workflow.
+
+The project is explicitly designed around production-grade ML frameworks — scikit-learn for baseline modelling, PyTorch and TensorFlow/Keras for deep learning, and HuggingFace Transformers for BERT-based fine-tuning. Kaggle is used both as a dataset source and as a competition/benchmarking platform.
+
+1.1 Architectural Layers
+#	Layer	Responsibility
+L1	ML / NLP Core	Data preprocessing, feature engineering, model training, evaluation, inference
+L2	Backend API	Serve model predictions, expose REST endpoints, manage pipeline orchestration
+L3	Frontend Dashboard	React mobile UI: Dashboard, Aspect Analysis, Review Explorer, Keyword Insights
+L4	Data & Storage	Review collection, preprocessing, structured storage, versioning
+L5	Dev / MLOps	Environment management, experiment tracking, CI/CD, model registry
+
+1.2 Tier Classification
+Every tool in this document is classified by one of three tiers:
+Tier	Label	Meaning
+Core	Must implement	Required for the project to function. Cannot be substituted.
+Recommended	Strongly advised	Significantly improves quality or developer experience. Highly encouraged.
+Advanced	Bonus / optional	Adds professional-grade capability. Excellent for portfolio / viva.
+
+
+
+2. Master Stack Reference
+
+The table below is the single source of truth for every tool, library, and service used in the project. Rows are grouped by architectural layer. The coloured left border of each Layer cell matches the layer colour used throughout this document.
+
+Layer	Tool / Library	Version	Purpose in Project	Tier
+L1 — Machine Learning & NLP Core
+ML / NLP	Python	3.11+	Runtime for all data science, ML, and NLP code	Core
+ML / NLP	scikit-learn	1.4	Baseline models (Naïve Bayes, Logistic Regression, SVM), TF-IDF, GridSearchCV, metrics	Core
+ML / NLP	PyTorch	2.2	Fine-tuning BERT and training custom sequence-classification models with full autograd	Core
+ML / NLP	TensorFlow / Keras	2.16	Alternative deep learning backend; Keras API for rapid model prototyping and export	Core
+ML / NLP	HuggingFace Transformers	4.40	Pre-trained BERT, DistilBERT, RoBERTa; Trainer API for fine-tuning on review data	Core
+ML / NLP	HuggingFace Datasets	2.18	Dataset loading, splits, batching; bridges Kaggle CSVs and HuggingFace models	Core
+ML / NLP	NLTK	3.8	Tokenisation, stopword removal, lemmatisation for the preprocessing pipeline	Core
+ML / NLP	spaCy	3.7	Advanced NLP: named entity recognition, dependency parsing, aspect keyword extraction	Core
+ML / NLP	VADER Sentiment	latest	Rule-based sentiment baseline; fast inference, no training required	Recommended
+ML / NLP	TextBlob	0.18	Pattern-based polarity/subjectivity scoring; used for rapid benchmarking	Recommended
+ML / NLP	sentence-transformers	3.0	Semantic similarity for duplicate/spam detection via cosine similarity	Recommended
+ML / NLP	Optuna	3.6	Hyperparameter optimisation for BERT fine-tuning (learning rate, batch size, epochs)	Advanced
+L1b — Kaggle Competition & Dataset Layer
+Kaggle	Kaggle API (kaggle-python)	1.6	CLI + Python client: download datasets, submit predictions, check leaderboard	Core
+Kaggle	Kaggle Notebooks	Cloud	GPU-accelerated Jupyter environment for BERT training (free T4/P100 GPU)	Core
+Kaggle	Kaggle Competitions	—	NLP sentiment tasks (Yelp/Amazon reviews, NLP Getting Started) for model benchmarking	Core
+Kaggle	Kaggle Datasets	—	Public app store review datasets as training/augmentation corpus	Core
+L2 — Data Collection & Feature Engineering
+Data	google-play-scraper	1.2	Scrapes Tinder / Bumble / Hinge reviews from Google Play Store	Core
+Data	Pandas	2.2	Tabular data manipulation, preprocessing, feature engineering	Core
+Data	NumPy	1.26	Numerical arrays; backbone for feature matrices and embedding vectors	Core
+Data	SQLite	3.x	Local structured storage for cleaned review records and model outputs	Recommended
+Data	DVC (Data Version Control)	3.x	Version large CSV/model files independently of Git	Advanced
+Data	wordcloud (Python lib)	1.9	Generate word cloud PNGs from positive/negative term frequencies	Core
+L3 — Visualisation & Evaluation
+Visualisation	Matplotlib	3.8	Static charts for model evaluation plots (confusion matrix, ROC curve)	Core
+Visualisation	Seaborn	0.13	Heatmaps for aspect sentiment cross-tabulation	Recommended
+Visualisation	Plotly	5.21	Interactive charts exported as JSON for the React dashboard	Recommended
+Visualisation	MLflow	2.12	Experiment tracking: log loss, F1, hyperparams per training run	Recommended
+L4 — Backend API
+Backend	FastAPI	0.111	RESTful API framework; serves all ML inference endpoints to the React dashboard	Core
+Backend	Uvicorn	0.29	ASGI server; runs the FastAPI application in production	Core
+Backend	Pydantic	2.7	Request/response validation; type-safe API schema	Core
+Backend	Celery	5.4	Async task queue for batch inference jobs (large CSV uploads)	Advanced
+Backend	Redis	7.x	Message broker for Celery; also caches frequent sentiment query results	Advanced
+Backend	ONNX Runtime	1.18	Optimised model inference; BERT exported to ONNX for 3–5× faster API response	Advanced
+L5 — Frontend Dashboard (React)
+Frontend	React	18.3	Component-based UI; all four Stitch screens implemented as React components	Core
+Frontend	Vite	5.x	Build tool; fast HMR for development, optimised production bundle	Core
+Frontend	Tailwind CSS	3.4	Utility-first styling; mirrors Stitch prototype tokens (tinder.pink, rounded-3xl, etc.)	Core
+Frontend	Chart.js	4.4	Doughnut (sentiment distribution) and line charts (sentiment trend) on Dashboard screen	Core
+Frontend	react-wordcloud / d3-cloud	1.x / 0.x	Dynamic word clouds on Keyword Insights screen	Recommended
+Frontend	React Router	6.x	Client-side routing for the 4 screens + bottom navigation state	Core
+Frontend	Axios	1.7	HTTP client for calling FastAPI endpoints from the React app	Core
+Frontend	Recharts	2.12	Alternative chart library for aspect bar charts and trends (optional Chart.js substitute)	Recommended
+L6 — DevOps & MLOps
+DevOps	Git + GitHub	—	Version control for code; GitHub Actions for CI; GitHub Pages for dashboard demo hosting	Core
+DevOps	Docker	26.x	Containerise FastAPI + model files for reproducible deployment	Recommended
+DevOps	Docker Compose	2.x	Orchestrate FastAPI + Redis + Celery containers in local dev	Recommended
+DevOps	Google Colab	—	Free GPU environment for BERT fine-tuning when Kaggle quota is exhausted	Recommended
+DevOps	GitHub Actions	—	Automated CI: lint, test, build Docker image on every push to main	Advanced
+DevOps	pytest	8.x	Unit and integration tests for the pipeline and API	Recommended
+DevOps	Black + isort	—	Python code formatter and import sorter; enforced via pre-commit hooks	Recommended
+
+
+
+3. Machine Learning Framework Deep Dive
+
+This section details exactly how each major ML framework is used within the Sentix Tinder pipeline, with justification for each choice and the specific pipeline stage it powers.
+
+3.1 scikit-learn — Baseline & Classical ML
+Version	scikit-learn 1.4.x
+Role in Project	Baseline sentiment classifier, TF-IDF feature extraction, model evaluation, spam detection
+Install	pip install scikit-learn
+
+Usage Details
+•TfidfVectorizer: converts cleaned review text into TF-IDF sparse feature matrices (max_features=50,000, ngram_range=(1,2))
+•MultinomialNB: Naïve Bayes baseline for 3-class sentiment (Positive / Neutral / Negative)
+•LogisticRegression: second baseline with L2 regularisation; typically outperforms NB on review data
+•LinearSVC: fast linear SVM, strong F1 score on longer reviews, used as the production classical model
+•GridSearchCV / RandomizedSearchCV: hyperparameter tuning with 5-fold stratified cross-validation
+•classification_report, confusion_matrix, roc_auc_score: evaluation metrics piped to MLflow logging
+•cosine_similarity (from sklearn.metrics.pairwise): spam/duplicate detection by pairwise TF-IDF similarity
+
+Expected Performance (Baseline)
+Model	Accuracy	Precision	Recall	Macro F1
+Naïve Bayes + TF-IDF	~74%	~72%	~71%	~0.71
+Logistic Regression + TF-IDF	~79%	~78%	~77%	~0.77
+LinearSVC + TF-IDF	~81%	~80%	~79%	~0.79
+
+3.2 PyTorch — Deep Learning Backbone
+Version	PyTorch 2.2.x  (CUDA 12.1 build for GPU training)
+Role in Project	BERT fine-tuning, custom classification head, training loop management, model serialisation
+Install	pip install torch torchvision  (or conda install pytorch -c pytorch)
+
+Usage Details
+•torch.utils.data.Dataset: wraps review DataFrames into tokenised PyTorch datasets for the DataLoader
+•DataLoader: batched loading with shuffle=True for training, shuffle=False for eval
+•AutoModelForSequenceClassification (via HuggingFace): loads bert-base-uncased with a 3-class head
+•AdamW optimiser with linear warmup schedule (transformers.get_linear_schedule_with_warmup)
+•Mixed-precision training via torch.cuda.amp.autocast for faster Kaggle GPU utilisation
+•torch.save / torch.load: checkpoint saves every epoch; best checkpoint selected by val F1
+•torch.nn.functional.softmax: converts logits to per-class probability scores surfaced in the API response
+
+Training Configuration (BERT)
+Parameter	Value
+Base model	bert-base-uncased (110M params)
+Max sequence length	128 tokens (review texts are short; 256 for longer comparisons)
+Batch size	32 (training) / 64 (evaluation)
+Learning rate	2e-5 with linear warmup over 10% of steps
+Epochs	4 (early stopping on val loss, patience=2)
+Optimiser	AdamW (weight_decay=0.01)
+Label smoothing	0.1 on cross-entropy loss
+Expected Macro F1	≥ 0.86 on held-out test set
+
+3.3 TensorFlow / Keras — Prototyping & Export
+Version	TensorFlow 2.16.x  (Keras 3 included)
+Role in Project	LSTM/GRU baseline, Keras-native BERT via TFBertForSequenceClassification, TFLite export
+Install	pip install tensorflow  (GPU: pip install tensorflow[and-cuda])
+
+Usage Details
+•tf.keras.preprocessing.text.Tokenizer + pad_sequences: token-level preprocessing for LSTM baseline
+•tf.keras.Sequential LSTM/BiGRU model: word-embedding → BiGRU(128) → Dense(64) → Softmax(3), trained as a classical DL baseline
+•TFBertForSequenceClassification: TensorFlow version of BERT, used to cross-validate PyTorch fine-tuning results
+•tf.saved_model.save: exports the fine-tuned model for serving via TF Serving or conversion to TFLite for mobile
+•TF-Lite conversion (tf.lite.TFLiteConverter): optional on-device inference path for future mobile SDK integration
+•tf.data.Dataset: efficient data pipeline with .cache().shuffle().batch().prefetch() for fast training I/O
+
+3.4 HuggingFace Transformers — Pre-trained Model Hub
+Model Selection
+Model ID	Use Case	Why Chosen
+bert-base-uncased	Primary classifier	Strong general-purpose text encoder; well-studied on app review corpora
+distilbert-base-uncased	Fast inference API	40% smaller, 60% faster than BERT, retains 97% of accuracy
+roberta-base	Adversarial benchmark	Outperforms BERT on many sentiment tasks; used for leaderboard comparison
+cardiffnlp/twitter-roberta-base-sentiment	Zero-shot baseline	Pre-trained on social media; useful zero-shot comparison before fine-tuning
+sentence-transformers/all-MiniLM-L6-v2	Spam detection	Fast sentence embeddings for cosine-similarity spam clustering
+
+
+
+4. Kaggle Integration Strategy
+
+Kaggle plays a dual role in this project: as a training data source and as a competitive benchmarking platform. Both roles are critical to achieving the ML quality targets and academic credibility of the project.
+
+4.1 Role 1 — Dataset Source
+•Primary dataset: Google Play store reviews scraped locally via google-play-scraper
+•Augmentation datasets: publicly available Kaggle datasets provide additional labelled training examples:
+◦yelp-review-polarity — 598k labelled restaurant reviews for transfer pre-training
+◦amazon-reviews-for-sentiment-analysis — 3.6M product reviews, filtered to app categories
+◦app-reviews — 6k pre-labelled mobile app reviews from Kaggle, directly relevant to project domain
+•All Kaggle datasets are downloaded via the Kaggle Python API: kaggle datasets download <dataset-slug>
+
+4.2 Role 2 — Competition Participation
+Participation in the following Kaggle competitions directly benchmarks model quality and improves leaderboard-validated F1 scores:
+Competition	Relevance	Target Metric	Timeline
+NLP Getting Started (Disaster Tweets)	Binary text classification with BERT; foundational for the fine-tuning pipeline	F1 Score	Phase 1
+Yelp / Amazon Review Sentiment	3-class sentiment on user reviews — closest to Tinder review domain	Accuracy	Phase 2
+Feedback Prize (NLP)	Multi-label NLP; tests aspect extraction techniques applicable to ABSA module	Macro F1	Phase 3
+Google QUEST Q&A Labelling	Demonstrates ranking & relevance scoring transferable to keyword insights ranking	Spearman ρ	Optional
+
+Kaggle Workflow
+1.Set up Kaggle API credentials: kaggle.json → ~/.kaggle/kaggle.json (chmod 600)
+2.Join competition via API: kaggle competitions list -s sentiment
+3.Download data: kaggle competitions download -c <competition-name>
+4.Train in Kaggle Notebook (GPU): commit notebook → Kaggle auto-saves + enables submission
+5.Submit predictions: kaggle competitions submit -c <comp> -f submission.csv -m 'BERT v2'
+6.Check leaderboard: kaggle competitions leaderboard <comp> --show
+7.Port winning model weights back to the Sentix project fine-tuning pipeline
+
+4.3 GPU Resource Strategy
+Platform	Free GPU	Usage in Project
+Kaggle Notebooks	30 hrs/week T4 / P100	Primary BERT fine-tuning environment; submit competition predictions
+Google Colab (free)	T4, session-limited	Overflow training when Kaggle quota exhausted
+Google Colab Pro	A100 / V100	Optional paid tier for large-batch RoBERTa fine-tuning
+Local CPU	None	DistilBERT inference only (fast enough at < 200ms); all training offloaded
+
+
+
+5. Backend API — FastAPI Endpoint Reference
+
+The FastAPI backend bridges the ML pipeline and the React dashboard. All endpoints return JSON. The model is loaded once at startup and kept in memory for low-latency inference.
+
+Method	Endpoint	Auth	Response Shape	Powers Dashboard Screen
+GET	/health	None	{status, model_loaded}	—  (monitoring only)
+POST	/api/predict	API Key	{sentiment, confidence, scores}	Review Explorer — per-card sentiment badge
+POST	/api/predict/batch	API Key	{results: [{id, sentiment, …}]}	CSV upload processing (Upload tab)
+GET	/api/dashboard/summary	API Key	{total, avg_rating, positive_pct, …}	Dashboard Overview — KPI cards + donut
+GET	/api/dashboard/trends	API Key	{dates:[], positive:[], negative:[]}	Dashboard Overview — Trend line chart
+GET	/api/aspects	API Key	{aspects:[{name,pos,neu,neg}]}	Aspect Analysis — stacked bars
+GET	/api/keywords	API Key	{positive:[], negative:[], top:[]}	Keyword Insights — word clouds + list
+GET	/api/reviews	API Key	{reviews:[], total, page}	Review Explorer — paginated card list
+GET	/api/mismatches	API Key	{mismatches:[{id,stars,sentiment}]}	Dashboard — Mismatch Alert banner
+GET	/api/compare	API Key	{tinder:{},bumble:{},hinge:{}}	Compare tab — cross-app radar chart
+
+6. Dashboard Screen ↔ ML Feature Mapping
+
+This table maps each screen from the Stitch design to the exact ML model or API endpoint that powers it, and the libraries involved.
+
+Screen	UI Component	ML Feature	Library / Model
+Dashboard	Sentiment Donut (72% / 18% / 10%)	3-class sentiment prediction	BERT fine-tuned → FastAPI
+Dashboard	Trend Line Chart (30-day)	Temporal aggregation of predictions	Pandas groupby + Plotly
+Dashboard	Mismatch Alert (324 reviews)	Rating vs sentiment mismatch detector	sklearn threshold rule + Pandas
+Dashboard	KPI cards (12,842 reviews)	Review count + avg rating	google-play-scraper + SQLite
+Aspect Analysis	Stacked bars (UI/Pricing/Matches…)	Aspect-Based Sentiment Analysis (ABSA)	spaCy keyword rules + sklearn SVM
+Review Explorer	Per-review sentiment badge	Per-review inference	DistilBERT fast inference
+Review Explorer	Mismatch amber border	is_mismatch flag	sklearn + business rule
+Review Explorer	Filter chips (Mismatched Only…)	Filtered DB query	SQLite + FastAPI query params
+Keyword Insights	Word clouds (Positive / Negative)	TF-IDF top terms by sentiment class	sklearn TF-IDF + wordcloud lib
+Keyword Insights	Keyword frequency list + glow bars	Term frequency ranking	NLTK FreqDist + Pandas
+
+
+
+7. Recommended Project Structure
+
+The repository is organised to cleanly separate ML training code, the backend API, and the frontend — each independently runnable and testable.
+
+Path	Contents
+sentix-tinder/	Root: README.md, docker-compose.yml, .github/
+  ml/	All Python ML code
+  ml/data/	raw_reviews.csv, clean_reviews.csv (DVC tracked)
+  ml/notebooks/	Kaggle competition notebooks, EDA, baseline experiments
+  ml/preprocessing/	clean.py, tokenise.py, aspect_keywords.py
+  ml/models/	baseline_sklearn.py, lstm_keras.py, bert_pytorch.py
+  ml/train.py	CLI entry point: python train.py --model bert --epochs 4
+  ml/evaluate.py	Loads checkpoint, prints classification_report, saves confusion matrix PNG
+  ml/inference.py	Standalone inference script; used by FastAPI at startup
+  ml/saved_models/	Best checkpoint (.pt), ONNX export, tokeniser config (DVC tracked)
+  api/	FastAPI application
+  api/main.py	FastAPI app, router registration, startup model load
+  api/routers/	dashboard.py, reviews.py, aspects.py, keywords.py
+  api/schemas/	Pydantic request/response models
+  api/Dockerfile	Container definition for the API layer
+  dashboard/	React + Vite frontend
+  dashboard/src/	components/, screens/, hooks/, api/ (Axios clients)
+  dashboard/src/screens/	DashboardOverview.jsx, AspectAnalysis.jsx, ReviewExplorer.jsx, KeywordInsights.jsx
+  tests/	pytest suites
+  tests/test_pipeline.py	Unit tests for preprocessing, tokenisation, aspect extraction
+  tests/test_api.py	Integration tests for all FastAPI endpoints
+  requirements.txt	Pinned Python dependencies for the ML + API layers
+  package.json	React frontend dependencies
+
+8. Environment Setup Guide
+
+8.1 Python / ML Environment
+•Python 3.11+ recommended (3.10 minimum for PyTorch 2.x compatibility)
+•Create a virtual environment: python -m venv .venv  →  source .venv/bin/activate
+•Install ML dependencies: pip install torch transformers datasets scikit-learn spacy nltk pandas numpy mlflow optuna
+•Install API dependencies: pip install fastapi uvicorn pydantic celery redis onnxruntime
+•Download spaCy model: python -m spacy download en_core_web_sm
+•Download NLTK data: python -c "import nltk; nltk.download('stopwords'); nltk.download('wordnet')"
+
+8.2 Kaggle Setup
+•Create a Kaggle account and generate an API key from Account → API → Create New Token
+•Place kaggle.json at ~/.kaggle/kaggle.json and set permissions: chmod 600 ~/.kaggle/kaggle.json
+•Install the Kaggle CLI: pip install kaggle
+•Verify: kaggle --version
+
+8.3 Frontend Setup
+•Node.js 20 LTS required
+•cd dashboard && npm install
+•Development server: npm run dev  (Vite, hot reload at localhost:5173)
+•Production build: npm run build  (outputs to dashboard/dist/)
+
+8.4 Docker Compose (Full Stack)
+•docker compose up --build  — starts API (port 8000), Redis (6379), and Celery worker
+•API is accessible at http://localhost:8000/docs (auto-generated Swagger UI from FastAPI)
+
+
+
+9. Pinned Dependency Reference
+
+The following versions are tested together. Pin these exactly in requirements.txt to ensure reproducible results across machines and Kaggle Notebooks.
+
+Package	Pinned Version	Notes
+torch	2.2.2	CUDA 12.1 build for Kaggle / Colab GPU compatibility
+transformers	4.40.2	HuggingFace Transformers; pin for stable Trainer API
+datasets	2.18.0	HuggingFace Datasets; aligned with transformers version
+scikit-learn	1.4.2	Stable release; GridSearchCV and pipeline API
+tensorflow	2.16.1	TF + Keras 3; required for TFBertForSequenceClassification
+pandas	2.2.2	DataFrame operations; parquet support included
+numpy	1.26.4	NumPy 2.x not yet compatible with all torch ops — use 1.x
+spacy	3.7.4	en_core_web_sm model must match this version
+nltk	3.8.1	Stopwords, WordNet lemmatiser
+sentence-transformers	3.0.1	all-MiniLM-L6-v2 for cosine similarity spam detection
+fastapi	0.111.0	Pydantic v2 integration; async endpoint support
+uvicorn[standard]	0.29.0	ASGI server with HTTP/2 and WebSocket support
+pydantic	2.7.1	Request/response schema validation
+optuna	3.6.1	Hyperparameter search for BERT fine-tuning
+mlflow	2.12.2	Experiment tracking and model registry
+wordcloud	1.9.3	PNG generation for Keyword Insights screen
+google-play-scraper	1.2.7	Review collection from Google Play Store
+plotly	5.21.0	Interactive charts exported to JSON for React
+onnxruntime	1.18.0	Optimised BERT inference in production API
+kaggle	1.6.14	Kaggle API CLI and Python client
+
+10. Technology Decision Rationale
+
+Decision	Chosen	Alternatives Considered
+Primary DL framework	PyTorch 2.2	TensorFlow 2.x — both are used, but PyTorch is primary for BERT due to HuggingFace Trainer API depth
+API framework	FastAPI	Flask — chosen FastAPI for automatic OpenAPI docs, async support, and Pydantic v2 integration
+Frontend framework	React + Vite	Next.js — Vite chosen for simpler SPA setup matching the mobile prototype; no SSR needed
+Classical ML library	scikit-learn	No serious alternative — scikit-learn is the standard for TF-IDF, SVM, and pipeline management
+Chart library	Chart.js (+ Recharts)	D3.js — Chart.js matched existing Stitch prototype code exactly; Recharts added for React-native components
+Local storage	SQLite	PostgreSQL — SQLite chosen for zero-config local development; swap to PostgreSQL for production
+Model inference speed	ONNX Runtime	Torch native — ONNX provides 3–5× faster CPU inference for the deployed API endpoint
+Styling system	Tailwind CSS 3.4	CSS Modules / styled-components — Tailwind directly mirrors the Stitch prototype utility classes
+
+
+End of Document
+Sentix Tinder Tech Stack Document  ·  v1.0
