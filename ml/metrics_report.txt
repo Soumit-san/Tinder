@@ -1,0 +1,6 @@
+
+## Baseline Results
+              Model  Accuracy  Macro F1  ROC AUC (Macro)
+          LinearSVC  0.878011  0.580013              NaN
+Logistic_Regression  0.880574  0.560973         0.869380
+        Naive_Bayes  0.812916  0.354882         0.805519
