@@ -17,9 +17,9 @@
 - [ ] Filter out sparse reviews (< 5 tokens) and output to `clean_reviews.csv`.
 
 ## Phase 3: Classical ML & Baselines (Week 3)
-- [ ] Extract TF-IDF feature matrices (`max_features=50,000`).
-- [ ] Train baseline models: Multinomial Naïve Bayes, Logistic Regression, and LinearSVC.
-- [ ] Evaluate baselines using `classification_report`, `confusion_matrix`, and ROC AUC. Log metrics via MLflow.
+- [x] Extract TF-IDF feature matrices (`max_features=50,000`).
+- [x] Train baseline models: Multinomial Naïve Bayes, Logistic Regression, and LinearSVC.
+- [x] Evaluate baselines using `classification_report`, `confusion_matrix`, and ROC AUC. Log metrics via MLflow.
 
 ## Phase 4: Applied Deep Learning / BERT (Week 4-5)
 - [ ] Set up Kaggle Notebook (GPU enabled) or Google Colab for training.
