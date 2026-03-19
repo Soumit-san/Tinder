@@ -11,6 +11,7 @@ __pycache__/
 ml/data/
 ml/mlruns/
 *.onnx.data
+*.onnx
 
 # Frontend
 frontend/node_modules/

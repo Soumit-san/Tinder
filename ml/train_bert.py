@@ -28,9 +28,8 @@ def get_sentiment(rating):
             return 0 # Positive
         else:
             return None # Drop Neutral
-    except ValueError:
+    except (ValueError, TypeError):
         return None
-    return None
 
 def minimal_clean(text):
     if not isinstance(text, str):
@@ -55,10 +54,8 @@ def compute_metrics(eval_pred):
     return {'accuracy': acc, 'f1_macro': f1}
 
 def main():
-    if os.path.exists('ml/mlruns'):
-        os.chdir('ml')
-    elif os.path.exists('ml'):
-        os.chdir('ml')
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
         
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}")
@@ -70,9 +67,7 @@ def main():
         epochs = 3
 
     print("Loading data from raw_reviews.csv...")
-    data_path = 'data/raw_reviews.csv'
-    if not os.path.exists(data_path):
-        data_path = '../ml/data/raw_reviews.csv'
+    data_path = os.path.join(script_dir, 'data', 'raw_reviews.csv')
     
     df = pd.read_csv(data_path)
     
@@ -119,6 +114,7 @@ def main():
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1_macro",
+        greater_is_better=True,
         fp16=torch.cuda.is_available(),
         report_to="none"
     )
