@@ -10,6 +10,7 @@ __pycache__/
 *.csv
 ml/data/
 ml/mlruns/
+*.onnx.data
 
 # Frontend
 frontend/node_modules/

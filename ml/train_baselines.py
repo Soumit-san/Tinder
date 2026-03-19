@@ -21,10 +21,10 @@ def get_sentiment(rating):
         rating = float(rating)
         if rating <= 2:
             return 'Negative'
-        elif rating == 3:
-            return 'Neutral'
         elif rating >= 4:
             return 'Positive'
+        else:
+            return None # Drop Neutral
     except ValueError:
         return None
     return None

@@ -48,7 +48,6 @@ tinder.dark	#111418	Page background	Dark v1 & v2 only
 tinder.card	#1E2228	Card / section backgrounds	Dark v1 only
 sentiment.positive	#22C55E	Positive sentiment bars, labels	All variants
 sentiment.negative	#EF4444	Negative sentiment bars, alert badges	All variants
-sentiment.neutral	#94A3B8	Neutral segment in stacked bars	All variants
 Mismatch amber	#F59E0B	Rating/sentiment mismatch badge, border	All variants
 
 2.2 Typography
@@ -111,8 +110,8 @@ Component Inventory
 Component	Element Type	Content / Behaviour
 AppHeader	Sticky <header>	App title with gradient text, subtitle, user avatar circle (initials fallback). Sticky top-0, z-50.
 KPI Grid	2-col CSS grid	Total Reviews (12,842 / +12% MoM) and Avg. Rating (4.2★ vs 3.8 industry avg). Tap → drill-down detail (future).
-Sentiment Donut	Chart.js doughnut	80% cutout. Inner label: '72% Positive Score'. Legend row below: Positive 72% / Neutral 18% / Negative 10%.
-Trend Chart	Chart.js line chart	3 lines (Positive/Neutral/Negative) over time. Period selector dropdown (Last 30 Days / Last 7 Days).
+Sentiment Donut	Chart.js doughnut	80% cutout. Inner label: '80% Positive Score'. Legend row below: Positive 80% / Negative 20%.
+Trend Chart	Chart.js line chart	2 lines (Positive/Negative) over time. Period selector dropdown (Last 30 Days / Last 7 Days).
 Mismatch Alert	Alert banner	Red tinted bg, warning icon, headline, one-line description. Static in prototype; will link to Review Explorer filtered to mismatches.
 Bottom Nav (v2)	Fixed <nav>	Stats / Reviews / Alerts / Settings. Active = tinder-pink, inactive = gray-500. Glassmorphism background.
 
@@ -135,16 +134,16 @@ Component	Element Type	Content / Behaviour
 Back Header	Sticky header w/ back btn	Back arrow left, title centre, filter icon right. Gradient title text. backdrop-blur on dark v2.
 Intro Section	h2 + subtext paragraph	"Sentiment Breakdown" heading, review count sub-label (e.g. 'Based on 1,240 recent user reviews.')
 Aspect List	Vertical stack of items	Each item: label row (aspect name left, dominant sentiment % right), stacked 3-segment bar below.
-Stacked Bar	3-div flex row in container	h-3 rounded-full container, three child divs with % widths (Positive / Neutral / Negative).
-Dominant Label	Inline text badge	Colour matches dominant segment: green = positive, amber/gray = neutral, red = negative.
+Stacked Bar	2-div flex row in container	h-3 rounded-full container, two child divs with % widths (Positive / Negative).
+Dominant Label	Inline text badge	Colour matches dominant segment: green = positive, red = negative.
 
 Aspects & Sample Data
-Aspect	Positive %	Neutral %	Negative %	Dominant Sentiment
-UI / UX	70%	20%	10%	Positive (green)
-Pricing	25%	20%	55%	Negative (red)
-Matches / Algorithm	35%	45%	20%	Neutral (gray)
-Bugs / Performance	65%	15%	20%	Positive (green)
-Safety / Privacy	40%	25%	35%	Positive (green)
+Aspect	Positive %	Negative %	Dominant Sentiment
+UI / UX	85%	15%	Positive (green)
+Pricing	30%	70%	Negative (red)
+Matches / Algorithm	60%	40%	Positive (green)
+Bugs / Performance	75%	25%	Positive (green)
+Safety / Privacy	55%	45%	Positive (green)
 
 Animation
 •Each segment bar animates width from 0 → final value on scroll-into-view
@@ -175,7 +174,6 @@ State	Visual Indicator	Example
 Standard Negative	Red sentiment badge, gray border	1★ + NEGATIVE AI badge
 Standard Positive	Green sentiment badge, gray border	4★ + POSITIVE AI badge
 Mismatch Detected	Amber card border + corner warning badge	5★ + NEGATIVE AI badge + ⚠ overlay
-Neutral	Gray/slate sentiment badge, gray border	3★ + NEUTRAL badge
 
 4.4 Screen 4 — Keyword Insights
 
@@ -198,7 +196,7 @@ Rank	Keyword	Count	Sentiment	Bar Fill %
 1	Fake Profiles	1,024	Negative	85%
 2	Premium Price	876	Negative	73%
 3	Easy to Use	742	Positive	62%
-4	Match Quality	651	Neutral	54%
+4	Match Quality	651	Positive	54%
 5	App Crash	589	Negative	49%
 
 
@@ -230,12 +228,12 @@ The following components appear across multiple screens and should be extracted 
 Component Name	Used In	Key Props
 <AppHeader>	All screens	title, subtitle, avatarInitials, theme (dark|light), glassEffect (bool)
 <KPICard>	Dashboard	label, value, trend (text + colour), icon (optional)
-<SentimentDonut>	Dashboard	positive, neutral, negative (0–100 each), centerLabel
+<SentimentDonut>	Dashboard	positive, negative (0–100 each), centerLabel
 <TrendLineChart>	Dashboard	data (array), period (string), onPeriodChange
 <MismatchAlert>	Dashboard	count, description, onTap
-<AspectBar>	Aspect Analysis	label, positive, neutral, negative (%), animated (bool)
+<AspectBar>	Aspect Analysis	label, positive, negative (%), animated (bool)
 <ReviewCard>	Review Explorer	stars, sentiment, text, author, time, isMismatch (bool)
-<SentimentBadge>	Review Explorer	label (string), sentiment (pos|neg|neu)
+<SentimentBadge>	Review Explorer	label (string), sentiment (pos|neg)
 <FilterChipRow>	Review Explorer	chips (array), activeIndex, onSelect
 <WordCloud>	Keyword Insights	words (array of {text, weight, sentiment}), theme (pos|neg)
 <KeywordListItem>	Keyword Insights	rank, keyword, count, barPercent, sentiment

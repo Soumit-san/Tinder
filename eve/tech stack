@@ -111,7 +111,7 @@ Install	pip install scikit-learn
 
 Usage Details
 •TfidfVectorizer: converts cleaned review text into TF-IDF sparse feature matrices (max_features=50,000, ngram_range=(1,2))
-•MultinomialNB: Naïve Bayes baseline for 3-class sentiment (Positive / Neutral / Negative)
+•MultinomialNB: Naïve Bayes baseline for 2-class sentiment (Positive / Negative)
 •LogisticRegression: second baseline with L2 regularisation; typically outperforms NB on review data
 •LinearSVC: fast linear SVM, strong F1 score on longer reviews, used as the production classical model
 •GridSearchCV / RandomizedSearchCV: hyperparameter tuning with 5-fold stratified cross-validation
@@ -132,7 +132,7 @@ Install	pip install torch torchvision  (or conda install pytorch -c pytorch)
 Usage Details
 •torch.utils.data.Dataset: wraps review DataFrames into tokenised PyTorch datasets for the DataLoader
 •DataLoader: batched loading with shuffle=True for training, shuffle=False for eval
-•AutoModelForSequenceClassification (via HuggingFace): loads bert-base-uncased with a 3-class head
+•AutoModelForSequenceClassification (via HuggingFace): loads bert-base-uncased with a 2-class head
 •AdamW optimiser with linear warmup schedule (transformers.get_linear_schedule_with_warmup)
 •Mixed-precision training via torch.cuda.amp.autocast for faster Kaggle GPU utilisation
 •torch.save / torch.load: checkpoint saves every epoch; best checkpoint selected by val F1
@@ -147,7 +147,7 @@ Learning rate	2e-5 with linear warmup over 10% of steps
 Epochs	4 (early stopping on val loss, patience=2)
 Optimiser	AdamW (weight_decay=0.01)
 Label smoothing	0.1 on cross-entropy loss
-Expected Macro F1	≥ 0.86 on held-out test set
+Expected Macro F1	≥ 0.85 on held-out test set
 
 3.3 TensorFlow / Keras — Prototyping & Export
 Version	TensorFlow 2.16.x  (Keras 3 included)
@@ -156,7 +156,7 @@ Install	pip install tensorflow  (GPU: pip install tensorflow[and-cuda])
 
 Usage Details
 •tf.keras.preprocessing.text.Tokenizer + pad_sequences: token-level preprocessing for LSTM baseline
-•tf.keras.Sequential LSTM/BiGRU model: word-embedding → BiGRU(128) → Dense(64) → Softmax(3), trained as a classical DL baseline
+•tf.keras.Sequential LSTM/BiGRU model: word-embedding → BiGRU(128) → Dense(64) → Softmax(2)
 •TFBertForSequenceClassification: TensorFlow version of BERT, used to cross-validate PyTorch fine-tuning results
 •tf.saved_model.save: exports the fine-tuned model for serving via TF Serving or conversion to TFLite for mobile
 •TF-Lite conversion (tf.lite.TFLiteConverter): optional on-device inference path for future mobile SDK integration
@@ -189,7 +189,7 @@ Kaggle plays a dual role in this project: as a training data source and as a com
 Participation in the following Kaggle competitions directly benchmarks model quality and improves leaderboard-validated F1 scores:
 Competition	Relevance	Target Metric	Timeline
 NLP Getting Started (Disaster Tweets)	Binary text classification with BERT; foundational for the fine-tuning pipeline	F1 Score	Phase 1
-Yelp / Amazon Review Sentiment	3-class sentiment on user reviews — closest to Tinder review domain	Accuracy	Phase 2
+Yelp / Amazon Review Sentiment	2-class sentiment on user reviews — closest to Tinder review domain	Accuracy	Phase 2
 Feedback Prize (NLP)	Multi-label NLP; tests aspect extraction techniques applicable to ABSA module	Macro F1	Phase 3
 Google QUEST Q&A Labelling	Demonstrates ranking & relevance scoring transferable to keyword insights ranking	Spearman ρ	Optional
 
@@ -232,7 +232,7 @@ GET	/api/compare	API Key	{tinder:{},bumble:{},hinge:{}}	Compare tab — cross-ap
 This table maps each screen from the Stitch design to the exact ML model or API endpoint that powers it, and the libraries involved.
 
 Screen	UI Component	ML Feature	Library / Model
-Dashboard	Sentiment Donut (72% / 18% / 10%)	3-class sentiment prediction	BERT fine-tuned → FastAPI
+Dashboard	Sentiment Donut (80% / 20%)	2-class sentiment prediction	BERT fine-tuned → FastAPI
 Dashboard	Trend Line Chart (30-day)	Temporal aggregation of predictions	Pandas groupby + Plotly
 Dashboard	Mismatch Alert (324 reviews)	Rating vs sentiment mismatch detector	sklearn threshold rule + Pandas
 Dashboard	KPI cards (12,842 reviews)	Review count + avg rating	google-play-scraper + SQLite

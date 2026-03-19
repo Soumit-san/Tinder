@@ -25,7 +25,7 @@ The system is designed to be modular, extensible, and academically sound, with a
 
 2.1 Problem Statement
 App store reviews are one of the richest, most unfiltered sources of user feedback available for consumer applications. However, Tinder and similar dating apps accumulate thousands of reviews monthly, making manual analysis impractical. There is a need for an automated, intelligent pipeline that can:
-•Classify sentiment at scale (positive, negative, neutral)
+•Classify sentiment at scale (positive, negative)
 •Identify which specific aspects of the app are causing satisfaction or dissatisfaction
 •Track how sentiment evolves over time (correlated with app updates or features)
 •Detect anomalies such as spam reviews or mismatched star ratings
@@ -43,7 +43,7 @@ App store reviews are one of the richest, most unfiltered sources of user feedba
 In Scope	Out of Scope
 •Google Play review scraping
 •Text preprocessing pipeline
-•Sentiment classification (3-class)
+•Sentiment classification (2-class)
 •Aspect-based sentiment analysis
 •Trend visualisation
 •React + Flask dashboard
@@ -73,7 +73,7 @@ Features are prioritised using the MoSCoW framework: Must Have, Should Have, Cou
 ID	Feature	Priority	Module	Status
 F-01	Data Collection (Google Play Scraper)	Must Have	Data Ingestion	Planned
 F-02	Text Preprocessing Pipeline	Must Have	NLP Core	Planned
-F-03	Sentiment Classification (3-class)	Must Have	NLP Core	Planned
+F-03	Sentiment Classification (2-class)	Must Have	NLP Core	Planned
 F-04	Aspect-Based Sentiment Analysis	Must Have	NLP Core	Planned
 F-05	Word Cloud Generation	Must Have	Visualisation	Planned
 F-06	Sentiment Trend Over Time	Must Have	Analytics	Planned
@@ -101,12 +101,12 @@ The pipeline shall apply the following transformations in order:
 •Lemmatisation using spaCy en_core_web_sm
 •Short review filtering (< 5 tokens after preprocessing)
 
-F-03 — Sentiment Classification
-The system shall support three sentiment classification approaches, selectable via configuration:
+F-03 — Sentiment Classification (2-class)
+The system shall support sentiment classification approaches, selectable via configuration:
 •Basic: Multinomial Naive Bayes / Logistic Regression with TF-IDF features
 •Mid-tier: VADER (rule-based) and TextBlob (pattern-based)
 •Advanced: Fine-tuned BERT (bert-base-uncased via HuggingFace Transformers)
-Output labels: Positive, Negative, Neutral with confidence scores. The system shall report accuracy, precision, recall, and F1-score on a held-out test set.
+Output labels: Positive, Negative with confidence scores. The system shall report accuracy, precision, recall, and F1-score on a held-out test set.
 
 F-04 — Aspect-Based Sentiment Analysis
 The system shall identify sentiment for the following aspects within each review:
@@ -134,7 +134,7 @@ Detection results shall be output as a flagged_reviews.csv file and displayed in
 
 Category	Requirement
 Performance	Full pipeline (5,000 reviews) must complete in under 5 minutes on a standard laptop (8GB RAM, modern CPU). Dashboard must load in < 2 seconds.
-Accuracy	Sentiment classifier must achieve a minimum macro F1-score of 0.78 on the test set. Results must be reproducible with fixed random seeds.
+Accuracy	Sentiment classifier must achieve a minimum macro F1-score of 0.85 on the test set. Results must be reproducible.
 Scalability	The pipeline must handle up to 50,000 reviews without code changes. Batch processing must be used for BERT inference.
 Usability	Dashboard UI must be operable without any training. All charts must include axis labels and legends. Colour scheme must be accessible (WCAG AA contrast).
 Maintainability	All modules must have docstrings. A requirements.txt and README with setup instructions must be included. Code must pass flake8 linting.
@@ -173,12 +173,12 @@ The dashboard shall be built using React (Vite) on the frontend and FastAPI on t
 
 7.1 Overview Tab
 •Total review count, date range, average star rating (KPI cards)
-•Sentiment distribution donut chart (Positive / Negative / Neutral)
+•Sentiment distribution donut chart (Positive / Negative)
 •Overall sentiment score (composite index 0–100)
 •Top 3 most mentioned words across all reviews
 
 7.2 Trends Tab
-•Monthly sentiment trend line chart (3 lines: Positive, Negative, Neutral)
+•Monthly sentiment trend line chart (2 lines: Positive, Negative)
 •Review volume bar chart over time
 •Ability to overlay app update dates as vertical markers
 
@@ -222,7 +222,7 @@ clean_text	String	Preprocessed review text
 star_rating	Integer (1–5)	User-assigned star rating
 review_date	Date (YYYY-MM-DD)	Date the review was posted
 thumbs_up	Integer	Number of helpful votes received
-sentiment_label	Enum (Pos/Neg/Neu)	Predicted sentiment classification
+sentiment_label	Enum (Pos/Neg)	Predicted sentiment classification
 sentiment_score	Float (0.0–1.0)	Confidence score for predicted label
 aspect_sentiments	JSON Object	Per-aspect sentiment labels and scores
 is_mismatch	Boolean	Flag for rating vs sentiment inconsistency
@@ -256,7 +256,7 @@ Data quality issues (very short reviews)	High	Low	Apply minimum token length fil
 The project shall be considered successful if all of the following criteria are met at submission:
 
 Success Criterion	Target	Must Pass
-Sentiment classifier macro F1-score	>= 0.78	Yes
+Sentiment classifier macro F1-score	>= 0.85	Yes
 All 5 aspect dimensions covered	100%	Yes
 Dashboard loads and renders correctly	All 7 tabs	Yes
 CSV upload → results pipeline functional	< 30 seconds	Yes
