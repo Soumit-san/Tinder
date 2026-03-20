@@ -23,9 +23,9 @@ def get_sentiment(rating):
     try:
         rating = float(rating)
         if rating <= 2:
-            return 1 # Negative
+            return 0 # Negative
         elif rating >= 4:
-            return 0 # Positive
+            return 1 # Positive
         else:
             return None # Drop Neutral
     except (ValueError, TypeError):
