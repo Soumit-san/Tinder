@@ -21,13 +21,12 @@ def get_sentiment(rating):
         rating = float(rating)
         if rating <= 2:
             return 'Negative'
-        elif rating == 3:
-            return 'Neutral'
         elif rating >= 4:
             return 'Positive'
-    except ValueError:
+        else:
+            return None # Drop Neutral
+    except (ValueError, TypeError):
         return None
-    return None
 
 def main():
     # Make sure we are in the correct directory context
@@ -88,10 +87,13 @@ def main():
                 
             if y_prob is not None:
                 try:
-                    # multiclass roc_auc requires multi_class parameter
-                    auc = roc_auc_score(y_test, y_prob, multi_class='ovr', average='macro')
+                    # Binary ROC AUC: use positive-class scores
+                    if hasattr(y_prob, 'ndim') and y_prob.ndim == 2:
+                        auc = roc_auc_score(y_test, y_prob[:, 1])
+                    else:
+                        auc = roc_auc_score(y_test, y_prob)
                     mlflow.log_metric('roc_auc_macro', auc)
-                    print(f"ROC AUC (Macro): {auc:.4f}")
+                    print(f"ROC AUC: {auc:.4f}")
                 except Exception as e:
                     print(f"Could not compute ROC AUC: {e}")
             
