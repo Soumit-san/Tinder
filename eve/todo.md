@@ -29,10 +29,10 @@
 - [x] Export the fine-tuned model to ONNX format for rapid, CPU-friendly API inference.
 
 ## Phase 5: Advanced Analytics & Extra Features (Week 5-6)
-- [ ] Implement Aspect-Based Sentiment Analysis (ABSA) across UI/UX, Pricing, Matches, Bugs, and Safety.
-- [ ] Develop Rating vs. Sentiment Mismatch detector (e.g., 5★ rating but predicting Negative sentiment).
-- [ ] Build Fake/Spam review detection engine via TF-IDF cosine similarity (>0.90) and repeating-word heuristics.
-- [ ] Generate keyword clusters and TF-IDF term frequencies for Word Clouds using NLTK `FreqDist`.
+- [x] Implement Aspect-Based Sentiment Analysis (ABSA) across UI/UX, Pricing, Matches, Bugs, and Safety.
+- [x] Develop Rating vs. Sentiment Mismatch detector (e.g., 5★ rating but predicting Negative sentiment).
+- [x] Build Fake/Spam review detection engine via TF-IDF cosine similarity (>0.90) and repeating-word heuristics.
+- [x] Generate keyword clusters and TF-IDF term frequencies for Word Clouds using NLTK `FreqDist`.
 - [ ] (Optional) Implement NLG auto-summary logic for the Compare tab.
 
 ## Phase 6: Backend API Development (FastAPI) (Week 7)
