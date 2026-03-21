@@ -13,8 +13,8 @@ import numpy as np
 from fastapi import FastAPI, Query, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-import inference
-from schemas import (
+from backend import inference
+from backend.schemas import (
     HealthResponse, SummaryResponse, TrendPoint, TrendsResponse,
     MismatchItem, MismatchesResponse, ReviewItem, ReviewsResponse,
     AspectStat, AspectsResponse, KeywordsResponse, KeywordItem,
@@ -22,7 +22,11 @@ from schemas import (
     PredictRequest, PredictResponse, BatchPredictItem, BatchPredictResponse,
 )
 
+from backend.worker import predict_batch_task, celery_app
+from celery.result import AsyncResult
+
 # ── Resolve data paths relative to project root ──────────────────────────────
+# API reads from the same directory producers write to
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, "ml", "data")
 
@@ -290,8 +294,8 @@ def predict(req: PredictRequest):
     return PredictResponse(sentiment=label, confidence=round(conf, 4), scores=scores)
 
 
-# ── Predict Batch (CSV upload) ───────────────────────────────────────────────
-@app.post("/api/predict/batch", response_model=BatchPredictResponse)
+# ── Predict Batch (CSV upload via Celery) ────────────────────────────────────
+@app.post("/api/predict/batch", response_model=dict)
 async def predict_batch(file: UploadFile = File(...)):
     if not inference.is_loaded():
         raise HTTPException(503, "Model not loaded")
@@ -299,22 +303,34 @@ async def predict_batch(file: UploadFile = File(...)):
         raise HTTPException(400, "Only CSV files are accepted")
 
     content = await file.read()
-    df = pd.read_csv(io.BytesIO(content))
+    try:
+        content_str = content.decode("utf-8")
+        df = pd.read_csv(io.StringIO(content_str))
+    except (pd.errors.EmptyDataError, pd.errors.ParserError, UnicodeDecodeError, Exception) as e:
+        raise HTTPException(status_code=400, detail=f"Malformed CSV upload: {str(e)}")
+
     if "review_text" not in df.columns and "text" not in df.columns:
         raise HTTPException(400, "CSV must have a 'review_text' or 'text' column")
 
     text_col = "review_text" if "review_text" in df.columns else "text"
-    texts = df[text_col].dropna().astype(str).tolist()
 
-    predictions = inference.predict_batch(texts)
-    results = [
-        BatchPredictItem(text=t, sentiment=label, confidence=round(conf, 4))
-        for t, (label, conf) in zip(texts, predictions)
-    ]
-    return BatchPredictResponse(results=results)
+    # Dispatch to Celery worker
+    job = predict_batch_task.delay(content_str, text_col)
+    return {"job_id": job.id, "status": "processing"}
+
+
+@app.get("/api/predict/batch/{job_id}", response_model=dict)
+def get_batch_status(job_id: str):
+    res = AsyncResult(job_id, app=celery_app)
+    if res.ready():
+        if res.successful():
+            return {"job_id": job_id, "status": "completed", "result": res.result}
+        else:
+            return {"job_id": job_id, "status": "failed", "error": str(res.result)}
+    return {"job_id": job_id, "status": "processing"}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

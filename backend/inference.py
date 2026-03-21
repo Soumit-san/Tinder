@@ -36,13 +36,21 @@ def load_model(model_dir: str | None = None) -> bool:
     global _session, _tokenizer
     if model_dir is None:
         model_dir = os.path.join(os.path.dirname(__file__), "..", "ml", "models")
+    
+    vocab_path = os.path.join(model_dir, "vocab.txt")
+    tokenizer_json_path = os.path.join(model_dir, "tokenizer.json")
+    if not (os.path.exists(vocab_path) or os.path.exists(tokenizer_json_path)):
+        print(f"[inference] Tokenizer files not found in {model_dir}")
+        return False
+
     model_path = os.path.join(model_dir, "model.onnx")
     if not os.path.exists(model_path):
         print(f"[inference] ONNX model not found at {model_path}")
         return False
+        
     _session = ort.InferenceSession(model_path)
-    _tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-    print(f"[inference] ONNX model loaded from {model_path}")
+    _tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    print(f"[inference] ONNX model and tokenizer loaded successfully from {model_dir}")
     return True
 
 
