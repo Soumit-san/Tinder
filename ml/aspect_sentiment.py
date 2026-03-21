@@ -4,6 +4,7 @@ Assigns aspect tags to reviews using keyword matching, then uses the ONNX BERT
 model to predict binary sentiment per review. Outputs per-aspect sentiment breakdown.
 """
 import os
+import re
 import argparse
 import pandas as pd
 from onnx_inference import minimal_clean, predict_sentiment, LABEL_MAP
@@ -39,22 +40,34 @@ ASPECT_KEYWORDS = {
     ],
 }
 
+# Pre-compile word-boundary regex per aspect for efficient matching
+_ASPECT_PATTERNS = {
+    aspect: re.compile(
+        r'\b(?:' + '|'.join(re.escape(kw) for kw in keywords) + r')\b',
+        re.IGNORECASE,
+    )
+    for aspect, keywords in ASPECT_KEYWORDS.items()
+}
+
 
 def detect_aspects(text):
-    """Return list of aspect names that match keywords in the text."""
-    text_lower = text.lower()
+    """Return list of aspect names that match keywords in the text using word boundaries."""
     matched = []
-    for aspect, keywords in ASPECT_KEYWORDS.items():
-        for kw in keywords:
-            if kw in text_lower:
-                matched.append(aspect)
-                break
+    for aspect, pattern in _ASPECT_PATTERNS.items():
+        if pattern.search(text):
+            matched.append(aspect)
     return matched
 
 
 def main():
+    def positive_int(value):
+        ivalue = int(value)
+        if ivalue <= 0:
+            raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
+        return ivalue
+
     parser = argparse.ArgumentParser(description="Aspect-Based Sentiment Analysis")
-    parser.add_argument('--max-rows', type=int, default=2000,
+    parser.add_argument('--max-rows', type=positive_int, default=2000,
                         help="Max reviews to process through ONNX inference (default: 2000)")
     args = parser.parse_args()
 
@@ -107,9 +120,12 @@ def main():
     print(f"Saved {len(result_df)} aspect-tagged rows to {out_path}")
 
     # Print summary
-    print("\n-- Aspect Sentiment Summary --")
-    summary = result_df.groupby(['aspect', 'sentiment']).size().unstack(fill_value=0)
-    print(summary)
+    if result_df.empty or not {'aspect', 'sentiment'}.issubset(result_df.columns):
+        print("\nNo aspect-tagged rows to summarize.")
+    else:
+        print("\n-- Aspect Sentiment Summary --")
+        summary = result_df.groupby(['aspect', 'sentiment']).size().unstack(fill_value=0)
+        print(summary)
 
 
 if __name__ == '__main__':

@@ -36,13 +36,17 @@ def check_repetition(text, threshold=0.5):
 
 def find_near_duplicates(texts, threshold=0.90, max_samples=5000):
     """Find pairs of reviews with cosine similarity > threshold.
-    Uses TF-IDF vectorization. Limits to max_samples for memory efficiency."""
+    Uses TF-IDF vectorization. Raises ValueError if len(texts) exceeds
+    the hard memory cap (max_samples); reduce --max-rows or increase
+    max_samples to proceed."""
     if len(texts) > max_samples:
-        sample_indices = np.random.RandomState(42).choice(len(texts), max_samples, replace=False)
-        sampled_texts = [texts[i] for i in sample_indices]
-    else:
-        sample_indices = np.arange(len(texts))
-        sampled_texts = texts
+        raise ValueError(
+            f"Input size ({len(texts)}) exceeds the hard memory cap "
+            f"({max_samples}). Reduce --max-rows to <= {max_samples} "
+            f"or increase max_samples in find_near_duplicates()."
+        )
+    sample_indices = np.arange(len(texts))
+    sampled_texts = texts
 
     vectorizer = TfidfVectorizer(max_features=10000)
     tfidf_matrix = vectorizer.fit_transform(sampled_texts)
@@ -66,8 +70,14 @@ def find_near_duplicates(texts, threshold=0.90, max_samples=5000):
 
 
 def main():
+    def positive_int(value):
+        ivalue = int(value)
+        if ivalue <= 0:
+            raise argparse.ArgumentTypeError(f"{value} is not a positive integer")
+        return ivalue
+
     parser = argparse.ArgumentParser(description="Fake / Spam Review Detection")
-    parser.add_argument('--max-rows', type=int, default=5000,
+    parser.add_argument('--max-rows', type=positive_int, default=5000,
                         help="Max reviews to process (default: 5000)")
     args = parser.parse_args()
 

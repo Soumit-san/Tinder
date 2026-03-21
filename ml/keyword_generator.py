@@ -34,8 +34,15 @@ def minimal_clean(text):
 
 def get_top_tfidf_words(texts, n=50):
     """Extract top-N words by mean TF-IDF score across the corpus."""
-    vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
-    tfidf_matrix = vectorizer.fit_transform(texts)
+    # Filter out empty/whitespace-only strings
+    texts = [t for t in texts if t and t.strip()]
+    if not texts:
+        return []
+    try:
+        vectorizer = TfidfVectorizer(max_features=5000, stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform(texts)
+    except ValueError:
+        return []
     feature_names = vectorizer.get_feature_names_out()
     mean_scores = np.array(tfidf_matrix.mean(axis=0)).flatten()
     top_indices = mean_scores.argsort()[::-1][:n]
@@ -46,10 +53,12 @@ def get_top_tfidf_words(texts, n=50):
 
 
 def get_freq_dist(texts, n=50):
-    """Get top-N words by raw frequency, excluding stopwords."""
+    """Get top-N words by raw frequency, excluding stopwords.
+    Uses minimal_clean to normalize tokens so counts align with TF-IDF output."""
     all_tokens = []
     for text in texts:
-        tokens = text.lower().split()
+        cleaned = minimal_clean(text)
+        tokens = cleaned.split()
         filtered = [t for t in tokens if t not in stop_words and len(t) > 2]
         all_tokens.extend(filtered)
     fd = FreqDist(all_tokens)

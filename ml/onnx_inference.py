@@ -59,7 +59,9 @@ def predict_sentiment(texts):
         )
         feeds = {k: encoded[k].astype(np.int64) for k in encoded if k in input_names}
         logits = session.run(None, feeds)[0]
-        probs = np.exp(logits) / np.exp(logits).sum(axis=1, keepdims=True)
+        logits_max = logits.max(axis=1, keepdims=True)
+        exp = np.exp(logits - logits_max)
+        probs = exp / exp.sum(axis=1, keepdims=True)
         label = int(np.argmax(probs, axis=1)[0])
         conf = float(np.max(probs, axis=1)[0])
         all_labels.append(label)
