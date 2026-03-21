@@ -298,8 +298,6 @@ def predict(req: PredictRequest):
 # ── Predict Batch (CSV upload via Celery) ────────────────────────────────────
 @app.post("/api/predict/batch", response_model=dict)
 async def predict_batch(file: UploadFile = File(...)):
-    if not inference.is_loaded():
-        raise HTTPException(503, "Model not loaded")
     if not file.filename.endswith(".csv"):
         raise HTTPException(400, "Only CSV files are accepted")
 
