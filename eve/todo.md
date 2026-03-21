@@ -36,11 +36,11 @@
 - [ ] (Optional) Implement NLG auto-summary logic for the Compare tab.
 
 ## Phase 6: Backend API Development (FastAPI) (Week 7)
-- [ ] Initialize FastAPI app with Pydantic type validation and Uvicorn server setup.
-- [ ] Load the ONNX BERT model and classical ML pipelines into memory at startup.
-- [ ] Implement Dashboard aggregate endpoints (`/api/dashboard/summary`, `/api/dashboard/trends`, `/api/mismatches`).
-- [ ] Implement UI data endpoints (`/api/reviews`, `/api/aspects`, `/api/keywords`, `/api/compare`).
-- [ ] Develop `/api/predict/batch` endpoint and integrate Celery + Redis for handling async CSV uploads.
+- [x] Initialize FastAPI app with Pydantic type validation and Uvicorn server setup.
+- [x] Load the ONNX BERT model and classical ML pipelines into memory at startup.
+- [x] Implement Dashboard aggregate endpoints (`/api/dashboard/summary`, `/api/dashboard/trends`, `/api/mismatches`).
+- [x] Implement UI data endpoints (`/api/reviews`, `/api/aspects`, `/api/keywords`, `/api/compare`).
+- [x] Develop `/api/predict/batch` endpoint and integrate Celery + Redis for handling async CSV uploads.
 
 ## Phase 7: Frontend Interface (React + Tailwind) (Week 8)
 - [ ] Configure Tailwind CSS with official aesthetic tokens (`tinder.pink: #FE3C72`, `tinder.orange: #FF7854`, `sentiment.positive: #22C55E`).
