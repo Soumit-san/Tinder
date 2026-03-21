@@ -47,9 +47,15 @@ def load_model(model_dir: str | None = None) -> bool:
     if not os.path.exists(model_path):
         print(f"[inference] ONNX model not found at {model_path}")
         return False
-        
-    _session = ort.InferenceSession(model_path)
-    _tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    try:
+        _session = ort.InferenceSession(model_path)
+        _tokenizer = AutoTokenizer.from_pretrained(model_dir)
+    except Exception as e:
+        print(f"[inference] Error loading model or tokenizer: {e}")
+        _session = None
+        _tokenizer = None
+        return False
+
     print(f"[inference] ONNX model and tokenizer loaded successfully from {model_dir}")
     return True
 

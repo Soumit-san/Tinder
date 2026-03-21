@@ -24,6 +24,7 @@ from backend.schemas import (
 
 from backend.worker import predict_batch_task, celery_app
 from celery.result import AsyncResult
+from kombu.exceptions import OperationalError
 
 # ── Resolve data paths relative to project root ──────────────────────────────
 # API reads from the same directory producers write to
@@ -76,8 +77,8 @@ def _load_data():
         spam_df = store.flagged_reviews[["review_id", "is_spam"]].drop_duplicates("review_id")
         merged = merged.merge(spam_df, on="review_id", how="left")
 
-    merged["is_mismatch"] = merged.get("is_mismatch", pd.Series(dtype=bool)).fillna(False)
-    merged["is_spam"] = merged.get("is_spam", pd.Series(dtype=bool)).fillna(False)
+    merged["is_mismatch"] = merged.get("is_mismatch", pd.Series(False, index=merged.index)).fillna(False)
+    merged["is_spam"] = merged.get("is_spam", pd.Series(False, index=merged.index)).fillna(False)
     store.reviews_merged = merged
 
     print(f"[startup] Loaded {len(store.raw_reviews)} raw reviews, "
@@ -315,19 +316,27 @@ async def predict_batch(file: UploadFile = File(...)):
     text_col = "review_text" if "review_text" in df.columns else "text"
 
     # Dispatch to Celery worker
-    job = predict_batch_task.delay(content_str, text_col)
-    return {"job_id": job.id, "status": "processing"}
+    try:
+        job = predict_batch_task.delay(content_str, text_col)
+        return {"job_id": job.id, "status": "processing"}
+    except OperationalError as e:
+        print(f"[predict_batch] Celery broker OperationalError: {e}")
+        raise HTTPException(503, "Batch processing service is currently unavailable.")
 
 
 @app.get("/api/predict/batch/{job_id}", response_model=dict)
 def get_batch_status(job_id: str):
-    res = AsyncResult(job_id, app=celery_app)
-    if res.ready():
-        if res.successful():
-            return {"job_id": job_id, "status": "completed", "result": res.result}
-        else:
-            return {"job_id": job_id, "status": "failed", "error": str(res.result)}
-    return {"job_id": job_id, "status": "processing"}
+    try:
+        res = AsyncResult(job_id, app=celery_app)
+        if res.ready():
+            if res.successful():
+                return {"job_id": job_id, "status": "completed", "result": res.result}
+            else:
+                return {"job_id": job_id, "status": "failed", "error": str(res.result)}
+        return {"job_id": job_id, "status": "processing"}
+    except OperationalError as e:
+        print(f"[get_batch_status] Celery broker OperationalError for job {job_id}: {e}")
+        raise HTTPException(503, "Batch processing service is currently unavailable.")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
