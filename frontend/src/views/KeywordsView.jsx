@@ -6,6 +6,7 @@ import { cn } from '../App';
 export default function KeywordsView() {
   const [data, setData] = useState({ positive: [], negative: [], top: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [cloudType, setCloudType] = useState('positive'); // 'positive' | 'negative'
 
   useEffect(() => {
@@ -15,6 +16,7 @@ export default function KeywordsView() {
         setData(res.data);
       } catch (err) {
         console.error("Failed to fetch keywords:", err);
+        setError("Failed to load keyword insights. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -35,23 +37,7 @@ export default function KeywordsView() {
     ? (data?.positive || []).map(w => ({ text: w?.word || w?.text, value: w?.count ?? w?.value ?? 0 }))
     : (data?.negative || []).map(w => ({ text: w?.word || w?.text, value: w?.count ?? w?.value ?? 0 }));
 
-  const options = {
-    colors: cloudType === 'positive' 
-      ? ['#22c55e', '#4ade80', '#bbf7d0', '#86efac'] 
-      : ['#ef4444', '#f87171', '#fecaca', '#fca5a5'],
-    enableTooltip: true,
-    deterministic: false,
-    fontFamily: 'inherit',
-    fontSizes: [20, 60],
-    fontStyle: 'normal',
-    fontWeight: 'bold',
-    padding: 1,
-    rotations: 1,
-    rotationAngles: [0, 0],
-    scale: 'sqrt',
-    spiral: 'archimedean',
-    transitionDuration: 1000,
-  };
+  // (Removed unused 'options' object)
 
   return (
     <div className="space-y-6 pb-24 animate-in fade-in duration-500">
@@ -85,7 +71,11 @@ export default function KeywordsView() {
         </button>
       </div>
 
-      {activeWords.length > 0 ? (
+      {error ? (
+        <div className="glass-panel p-6 text-center text-sentiment-negative font-medium border border-sentiment-negative/20">
+          {error}
+        </div>
+      ) : activeWords.length > 0 ? (
         <div className="glass-panel p-6 h-[300px] flex flex-wrap items-center justify-center gap-4 overflow-hidden">
           {activeWords.slice(0, 30).map((w, i) => (
             <span 

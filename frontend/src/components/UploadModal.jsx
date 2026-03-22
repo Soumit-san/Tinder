@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { UploadCloud, X, File, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import api from '../api';
 import { cn } from '../App';
@@ -8,6 +8,19 @@ export default function UploadModal({ isOpen, onClose }) {
   const [status, setStatus] = useState('idle'); // idle, uploading, processing, complete, error
   const [errorMsg, setErrorMsg] = useState("");
   const [jobId, setJobId] = useState(null);
+  const isPolling = useRef(false);
+  const timeoutRef = useRef(null);
+
+  useEffect(() => {
+    isPolling.current = isOpen;
+    if (!isOpen && timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    return () => {
+      isPolling.current = false;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -20,9 +33,7 @@ export default function UploadModal({ isOpen, onClose }) {
     formData.append("file", file);
 
     try {
-      const res = await api.post('/predict/batch', formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const res = await api.post('/predict/batch', formData);
       setJobId(res.data.job_id);
       setStatus('processing');
       pollStatus(res.data.job_id);
@@ -34,24 +45,30 @@ export default function UploadModal({ isOpen, onClose }) {
   };
 
   const pollStatus = async (id) => {
+    if (!isPolling.current) return;
     try {
       const res = await api.get(`/predict/batch/${id}`);
+      if (!isPolling.current) return;
       if (res.data.status === 'completed') {
         setStatus('processing');
         try {
           await api.post(`/dataset/apply/${id}`);
+          if (!isPolling.current) return;
           setStatus('complete');
         } catch (applyErr) {
+          if (!isPolling.current) return;
           setStatus('error');
           setErrorMsg("Failed to patch into dashboard: " + (applyErr.response?.data?.detail || ""));
         }
       } else if (res.data.status === 'failed') {
+        if (!isPolling.current) return;
         setStatus('error');
         setErrorMsg(res.data.error || "Processing failed.");
       } else {
-        setTimeout(() => pollStatus(id), 2000); // poll every 2 seconds
+        timeoutRef.current = setTimeout(() => pollStatus(id), 2000); // poll every 2 seconds
       }
     } catch (err) {
+      if (!isPolling.current) return;
       console.error(err);
       setStatus('error');
       setErrorMsg("Connection lost while polling status.");
@@ -63,6 +80,7 @@ export default function UploadModal({ isOpen, onClose }) {
     setStatus('idle');
     setJobId(null);
     setErrorMsg("");
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
 
   return (
@@ -89,7 +107,13 @@ export default function UploadModal({ isOpen, onClose }) {
                   type="file" 
                   accept=".csv"
                   className="hidden" 
-                  onChange={(e) => setFile(e.target.files[0])}
+                  onChange={(e) => {
+                    if (e.target && e.target.files && e.target.files.length > 0) {
+                      setFile(e.target.files[0]);
+                    } else {
+                      setFile(null);
+                    }
+                  }}
                 />
               </label>
 
