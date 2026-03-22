@@ -42,7 +42,15 @@ export default function UploadModal({ isOpen, onClose }) {
       if (!isPolling.current) return;
       console.error(err);
       setStatus('error');
-      setErrorMsg(err.response?.data?.detail || "Upload failed. Please ensure the CSV has a 'review_text' column.");
+      
+      let errorText = "Upload failed. Please ensure the CSV has a 'review_text' column.";
+      const detail = err.response?.data?.detail;
+      if (detail) { // stringify safely
+        if (typeof detail === 'string') errorText = detail;
+        else if (Array.isArray(detail)) errorText = detail.map(d => d.msg).join(", ");
+        else errorText = JSON.stringify(detail);
+      }
+      setErrorMsg(errorText);
     }
   };
 
