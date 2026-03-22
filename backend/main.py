@@ -79,6 +79,12 @@ def _load_data():
 
     merged["is_mismatch"] = merged.get("is_mismatch", pd.Series(False, index=merged.index)).fillna(False)
     merged["is_spam"] = merged.get("is_spam", pd.Series(False, index=merged.index)).fillna(False)
+    
+    # Fix false-positive spam for short positive/negative reviews (e.g. "Good", "worst")
+    if "star_rating" in merged.columns and "review_text" in merged.columns:
+        short_mask = (merged["review_text"].astype(str).str.len() < 30) & ((merged["star_rating"] >= 4) | (merged["star_rating"] <= 2))
+        merged.loc[short_mask, "is_spam"] = False
+
     store.reviews_merged = merged
 
     print(f"[startup] Loaded {len(store.raw_reviews)} raw reviews, "
@@ -295,7 +301,6 @@ def predict(req: PredictRequest):
     return PredictResponse(sentiment=label, confidence=round(conf, 4), scores=scores)
 
 
-# ── Predict Batch (CSV upload via Celery) ────────────────────────────────────
 @app.post("/api/predict/batch", response_model=dict)
 async def predict_batch(file: UploadFile = File(...)):
     if not file.filename.endswith(".csv"):
@@ -305,15 +310,19 @@ async def predict_batch(file: UploadFile = File(...)):
     try:
         content_str = content.decode("utf-8")
         df = pd.read_csv(io.StringIO(content_str))
+        # Strip descriptive suffixes from columns, e.g. "content [Description...]" -> "content"
+        df.columns = [str(c).split('[')[0].strip() for c in df.columns]
     except (pd.errors.EmptyDataError, pd.errors.ParserError, UnicodeDecodeError, Exception) as e:
         raise HTTPException(status_code=400, detail=f"Malformed CSV upload: {str(e)}")
 
-    if "review_text" not in df.columns and "text" not in df.columns:
-        raise HTTPException(400, "CSV must have a 'review_text' or 'text' column")
+    cols = [c.lower() for c in df.columns]
+    
+    # Fuzzy column matching
+    text_col = next((c for c in df.columns if c.lower() in ["review_text", "text", "content", "review"]), None)
+    if not text_col:
+        raise HTTPException(400, "CSV must have a 'review_text', 'text', 'content', or 'review' column")
 
-    text_col = "review_text" if "review_text" in df.columns else "text"
-
-    # Dispatch to Celery worker
+    # Dispatch to Celery worker, pass the entire CSV so it can process ratings/dates too
     try:
         job = predict_batch_task.delay(content_str, text_col)
         return {"job_id": job.id, "status": "processing"}
@@ -336,6 +345,44 @@ def get_batch_status(job_id: str):
         print(f"[get_batch_status] Celery broker OperationalError for job {job_id}: {e}")
         raise HTTPException(503, "Batch processing service is currently unavailable.")
 
+
+@app.post("/api/dataset/apply/{job_id}", response_model=dict)
+def apply_uploaded_dataset(job_id: str):
+    try:
+        res = AsyncResult(job_id, app=celery_app)
+        if not res.ready() or not res.successful():
+            raise HTTPException(400, "Job is not ready or failed.")
+        
+        data = res.result.get("results", [])
+        if not data:
+            raise HTTPException(400, "No results found in job.")
+
+        new_df = pd.DataFrame(data)
+        
+        # Override the global store
+        store.raw_reviews = new_df
+        store.mismatches = new_df[new_df["is_mismatch"] == True].copy()
+        if "is_spam" in new_df.columns:
+            store.flagged_reviews = new_df[new_df["is_spam"] == True].copy()
+        
+        # Aspects (fake for custom datasets to preserve UI)
+        aspect_records = []
+        for i, row in new_df.iterrows():
+            if pd.notna(row.get("sentiment_label")):
+                aspect_records.append({
+                    "review_id": row["review_id"],
+                    "app_name": row.get("app_name", "Custom"),
+                    "aspect": "Overall",
+                    "sentiment": row["sentiment_label"]
+                })
+        store.aspect_results = pd.DataFrame(aspect_records) if aspect_records else pd.DataFrame(columns=["review_id", "app_name", "aspect", "sentiment"])
+        
+        # Override merged view
+        store.reviews_merged = new_df
+        
+        return {"status": "applied", "message": "Dataset swapped successfully."}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to apply dataset: {str(e)}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 if __name__ == "__main__":
