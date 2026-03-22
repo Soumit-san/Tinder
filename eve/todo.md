@@ -43,13 +43,13 @@
 - [x] Develop `/api/predict/batch` endpoint and integrate Celery + Redis for handling async CSV uploads.
 
 ## Phase 7: Frontend Interface (React + Tailwind) (Week 8)
-- [ ] Configure Tailwind CSS with official aesthetic tokens (`tinder.pink: #FE3C72`, `tinder.orange: #FF7854`, `sentiment.positive: #22C55E`).
-- [ ] Setup global application layout enforcing empty states and Mobile First constraints (390px target).
-- [ ] Apply **Dark v2 (Glassmorphism)** theme with fixed backdrop-blur Bottom Navigation.
-- [ ] **Screen 1 (Dashboard)**: Build KPI stat grid, Sentiment Donut (Chart.js), Trend Line Chart, and actionable Mismatch Alert banner.
-- [ ] **Screen 2 (Aspect Analysis)**: Create aspect breakdown metrics with smooth, 3-segment staggered DOM animations.
-- [ ] **Screen 3 (Review Explorer)**: Build the filterable Review Cards list, highlighting rating mismatches with amber borders and "WARNING" pill badges.
-- [ ] **Screen 4 (Keyword Insights)**: Integrate `react-wordcloud` (or d3-cloud) for Interactive Word Clouds and Top Keyword ranked stat tracks.
+- [x] Configure Tailwind CSS with official aesthetic tokens (`tinder.pink: #FE3C72`, `tinder.orange: #FF7854`, `sentiment.positive: #22C55E`).
+- [x] Setup global application layout enforcing empty states and Mobile First constraints (390px target).
+- [x] Apply **Dark v2 (Glassmorphism)** theme with fixed backdrop-blur Bottom Navigation.
+- [x] **Screen 1 (Dashboard)**: Build KPI stat grid, Sentiment Donut (Chart.js), Trend Line Chart, and actionable Mismatch Alert banner.
+- [x] **Screen 2 (Aspect Analysis)**: Create aspect breakdown metrics with smooth, 3-segment staggered DOM animations.
+- [x] **Screen 3 (Review Explorer)**: Build the filterable Review Cards list, highlighting rating mismatches with amber borders and "WARNING" pill badges.
+- [x] **Screen 4 (Keyword Insights)**: Integrate `react-wordcloud` (or d3-cloud) for Interactive Word Clouds and Top Keyword ranked stat tracks.
 
 ## Phase 8: Polish, Testing & Submission (Week 9-10)
 - [ ] Write integration and unit tests (`pytest`) covering the FastAPI API endpoints and core NLP preprocessing code.

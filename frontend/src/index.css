@@ -4,6 +4,22 @@
 
 @layer base {
   body {
-    @apply bg-[#111418] text-white antialiased;
+    @apply bg-tinder-dark text-white antialiased;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-tinder-card/60 backdrop-blur-md border border-white/10 shadow-lg rounded-2xl;
+  }
+  .app-layout {
+    @apply w-full max-w-[390px] md:max-w-2xl lg:max-w-5xl mx-auto min-h-screen relative pb-20 overflow-x-hidden border-x border-white/5;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
   }
 }
