@@ -34,10 +34,12 @@ export default function UploadModal({ isOpen, onClose }) {
 
     try {
       const res = await api.post('/predict/batch', formData);
+      if (!isPolling.current) return;
       setJobId(res.data.job_id);
       setStatus('processing');
       pollStatus(res.data.job_id);
     } catch (err) {
+      if (!isPolling.current) return;
       console.error(err);
       setStatus('error');
       setErrorMsg(err.response?.data?.detail || "Upload failed. Please ensure the CSV has a 'review_text' column.");
@@ -90,7 +92,7 @@ export default function UploadModal({ isOpen, onClose }) {
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-white/5">
           <h3 className="font-bold text-white">Upload New Reviews</h3>
-          <button onClick={() => { reset(); onClose(); }} className="text-gray-400 hover:text-white p-1">
+          <button onClick={() => { reset(); onClose(); }} className="text-gray-400 hover:text-white p-1" aria-label="Close upload modal">
             <X size={20} />
           </button>
         </div>
@@ -121,7 +123,7 @@ export default function UploadModal({ isOpen, onClose }) {
                 <div className="w-full bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3">
                   <File size={20} className="text-tinder-orange flex-shrink-0" />
                   <span className="text-sm text-gray-200 truncate flex-1">{file.name}</span>
-                  <button onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400">
+                  <button onClick={() => setFile(null)} className="text-gray-500 hover:text-red-400" aria-label="Remove selected file">
                     <X size={16} />
                   </button>
                 </div>
