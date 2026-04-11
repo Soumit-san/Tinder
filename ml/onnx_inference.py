@@ -2,14 +2,16 @@
 Shared ONNX BERT inference utilities for Phase 5 analytics modules.
 Handles single-sample inference since the exported ONNX model has fixed batch=1 shapes.
 """
+
 import os
 import re
+
 import numpy as np
 import onnxruntime as ort
 from transformers import AutoTokenizer
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-LABEL_MAP = {0: 'Negative', 1: 'Positive'}
+LABEL_MAP = {0: "Negative", 1: "Positive"}
 
 _session = None
 _tokenizer = None
@@ -24,6 +26,7 @@ def minimal_clean(text):
     text = re.sub(r"<.*?>", "", text)
     try:
         import emoji
+
         text = emoji.demojize(text, delimiters=(" ", " "))
     except ImportError:
         text = re.sub(r"[^\x00-\x7F]+", " ", text)
@@ -36,9 +39,9 @@ def _get_model():
     """Lazily load the ONNX session and tokenizer (singleton)."""
     global _session, _tokenizer
     if _session is None:
-        model_path = os.path.join(SCRIPT_DIR, 'models', 'model.onnx')
+        model_path = os.path.join(SCRIPT_DIR, "models", "model.onnx")
         _session = ort.InferenceSession(model_path)
-        _tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased')
+        _tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
     return _session, _tokenizer
 
 
@@ -54,8 +57,11 @@ def predict_sentiment(texts):
 
     for text in texts:
         encoded = tokenizer(
-            text, padding="max_length", truncation=True,
-            max_length=128, return_tensors="np"
+            text,
+            padding="max_length",
+            truncation=True,
+            max_length=128,
+            return_tensors="np",
         )
         feeds = {k: encoded[k].astype(np.int64) for k in encoded if k in input_names}
         logits = session.run(None, feeds)[0]

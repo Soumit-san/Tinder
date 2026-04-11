@@ -1,6 +1,8 @@
 """Pydantic v2 request/response models for all Sentix API endpoints."""
-from pydantic import BaseModel, Field
+
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 # ── Health ────────────────────────────────────────────────────────────────────
@@ -79,7 +81,7 @@ class AspectsResponse(BaseModel):
 # ── Keywords ──────────────────────────────────────────────────────────────────
 class KeywordItem(BaseModel):
     word: str
-    tfidf: float
+    tfidf: float = 0.0
     count: int
 
 

@@ -52,7 +52,7 @@
 - [x] **Screen 4 (Keyword Insights)**: Integrate `react-wordcloud` (or d3-cloud) for Interactive Word Clouds and Top Keyword ranked stat tracks.
 
 ## Phase 8: Polish, Testing & Submission (Week 9-10)
-- [ ] Write integration and unit tests (`pytest`) covering the FastAPI API endpoints and core NLP preprocessing code.
-- [ ] Run Lighthouse accessibility audits targetting >= 90 score.
-- [ ] Ensure Python formatting and linting conventions (Black, isort) are passed.
-- [ ] Complete final README, complete the GitHub repo documentation, and prepare the demo presentation video.
+- [x] Write integration and unit tests (`pytest`) covering the FastAPI API endpoints and core NLP preprocessing code.
+- [x] Run Lighthouse accessibility audits targetting >= 90 score.
+- [x] Ensure Python formatting and linting conventions (Black, isort) are passed.
+- [x] Complete final README, complete the GitHub repo documentation, and prepare the demo presentation video.
