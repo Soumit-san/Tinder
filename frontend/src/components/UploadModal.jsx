@@ -6,6 +6,7 @@ import { cn } from '../App';
 export default function UploadModal({ isOpen, onClose }) {
   const [file, setFile] = useState(null);
   const [status, setStatus] = useState('idle'); // idle, uploading, processing, complete, error
+  const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [errorMsg, setErrorMsg] = useState("");
   const [jobId, setJobId] = useState(null);
   const isPolling = useRef(false);
@@ -75,6 +76,9 @@ export default function UploadModal({ isOpen, onClose }) {
         setStatus('error');
         setErrorMsg(res.data.error || "Processing failed.");
       } else {
+        if (res.data.progress !== undefined) {
+          setProgress({ current: res.data.progress, total: res.data.total });
+        }
         timeoutRef.current = setTimeout(() => pollStatus(id), 2000); // poll every 2 seconds
       }
     } catch (err) {
@@ -89,6 +93,7 @@ export default function UploadModal({ isOpen, onClose }) {
     setFile(null);
     setStatus('idle');
     setJobId(null);
+    setProgress({ current: 0, total: 0 });
     setErrorMsg("");
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
   };
@@ -161,9 +166,19 @@ export default function UploadModal({ isOpen, onClose }) {
                 </h4>
                 <p className="text-xs text-gray-400 max-w-[200px]">
                   {status === 'processing' 
-                    ? 'Extracting sentiment, grouping aspects, and detecting anomalies. This may take a moment.' 
+                    ? (progress.total > 0 
+                        ? `Processed ${progress.current} of ${progress.total.toLocaleString()} reviews...`
+                        : 'Extracting sentiment, grouping aspects, and detecting anomalies. This may take a moment.')
                     : 'Sending data to the server.'}
                 </p>
+                {status === 'processing' && progress.total > 0 && (
+                  <div className="w-full mt-4 bg-white/5 rounded-full h-1.5 overflow-hidden border border-white/5">
+                    <div 
+                      className="bg-gradient-to-r from-tinder-orange to-tinder-pink h-full transition-all duration-500"
+                      style={{ width: `${Math.round((progress.current / progress.total) * 100)}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

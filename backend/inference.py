@@ -2,8 +2,10 @@
 Slim ONNX BERT inference module for the FastAPI backend.
 Loads the model once at startup and provides predict_one / predict_batch.
 """
+
 import os
 import re
+
 import numpy as np
 import onnxruntime as ort
 from transformers import AutoTokenizer
@@ -13,6 +15,14 @@ LABEL_MAP = {0: "Negative", 1: "Positive"}
 _session = None
 _tokenizer = None
 
+# Pre-check emoji support once to avoid per-call import overhead
+try:
+    import emoji
+
+    _HAS_EMOJI = True
+except ImportError:
+    _HAS_EMOJI = False
+
 
 def minimal_clean(text: str) -> str:
     """Minimal cleaning matching the BERT training pipeline."""
@@ -21,11 +31,14 @@ def minimal_clean(text: str) -> str:
     text = text.lower()
     text = re.sub(r"http\S+|www\S+", "", text)
     text = re.sub(r"<.*?>", "", text)
-    try:
-        import emoji
+
+    if _HAS_EMOJI:
+        import emoji  # Fast after cached once
+
         text = emoji.demojize(text, delimiters=(" ", " "))
-    except ImportError:
+    else:
         text = re.sub(r"[^\x00-\x7F]+", " ", text)
+
     text = re.sub(r"[^\w\s!?.,']", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
     return text
@@ -36,7 +49,7 @@ def load_model(model_dir: str | None = None) -> bool:
     global _session, _tokenizer
     if model_dir is None:
         model_dir = os.path.join(os.path.dirname(__file__), "..", "ml", "models")
-    
+
     vocab_path = os.path.join(model_dir, "vocab.txt")
     tokenizer_json_path = os.path.join(model_dir, "tokenizer.json")
     if not (os.path.exists(vocab_path) or os.path.exists(tokenizer_json_path)):
@@ -72,8 +85,11 @@ def predict_one(text: str) -> tuple[str, float, dict[str, float]]:
     clean = minimal_clean(text)
     input_names = [i.name for i in _session.get_inputs()]
     encoded = _tokenizer(
-        clean, padding="max_length", truncation=True,
-        max_length=128, return_tensors="np",
+        clean,
+        padding="max_length",
+        truncation=True,
+        max_length=128,
+        return_tensors="np",
     )
     feeds = {k: encoded[k].astype(np.int64) for k in encoded if k in input_names}
     logits = _session.run(None, feeds)[0]
@@ -87,11 +103,58 @@ def predict_one(text: str) -> tuple[str, float, dict[str, float]]:
     return LABEL_MAP[label_idx], conf, scores
 
 
-def predict_batch(texts: list[str]) -> list[tuple[str, float]]:
+from concurrent.futures import ThreadPoolExecutor
+
+def predict_batch(
+    texts: list[str], progress_callback=None
+) -> list[tuple[str, float]]:
     """Predict sentiment for a list of texts.
-    Returns list of (label, confidence) tuples."""
+    Returns list of (label, confidence) tuples.
+    Optional progress_callback(current, total) for tracking.
+    """
+    if not is_loaded():
+        raise RuntimeError("Model not loaded. Call load_model() first.")
+
     results = []
-    for t in texts:
-        label, conf, _ = predict_one(t)
-        results.append((label, conf))
+    input_names = [i.name for i in _session.get_inputs()]
+    batch_size = 200  # Smaller batch size for better thread distribution
+    max_workers = min(os.cpu_count() or 4, 8)  # Don't over-saturate
+
+    for i in range(0, len(texts), batch_size):
+        chunk_texts = texts[i : i + batch_size]
+        batch_cleaned = [minimal_clean(t) for t in chunk_texts]
+        
+        # Tokenize chunk
+        encoded = _tokenizer(
+            batch_cleaned,
+            padding="max_length",
+            truncation=True,
+            max_length=128,
+            return_tensors="np",
+        )
+
+        def predict_one_worker(idx):
+            feeds = {
+                k: encoded[k][idx : idx + 1].astype(np.int64)
+                for k in encoded
+                if k in input_names
+            }
+            logits = _session.run(None, feeds)[0]
+            
+            # Numerically stable softmax
+            logits_max = logits.max(axis=1, keepdims=True)
+            exp = np.exp(logits - logits_max)
+            probs = exp / exp.sum(axis=1, keepdims=True)
+
+            label_idx = int(np.argmax(probs, axis=1)[0])
+            conf = float(np.max(probs, axis=1)[0])
+            return (LABEL_MAP[label_idx], conf)
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            chunk_results = list(executor.map(predict_one_worker, range(len(batch_cleaned))))
+            results.extend(chunk_results)
+
+        if progress_callback:
+            progress_callback(len(results), len(texts))
+
     return results
